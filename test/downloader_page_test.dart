@@ -55,7 +55,12 @@ void main() {
     await _pumpConnected(tester, controller, transport);
     transport.stream.add(framed(validRpb(sequences: [100, 101])));
     await tester.pump();
+    await tester.pump();
     expect(find.text('Download ready'), findsOneWidget);
+    expect(find.text('Download complete'), findsOneWidget);
+    expect(find.text('Send email'), findsOneWidget);
+    await tester.tap(find.text('Later'));
+    await tester.pump();
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Save locally'), findsOneWidget);
     expect(find.text('Create email'), findsOneWidget);

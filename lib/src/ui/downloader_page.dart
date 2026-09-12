@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:file_selector/file_selector.dart' as selector;
 import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
@@ -24,19 +26,72 @@ final class _DownloaderPageState extends State<DownloaderPage> {
   late final bool _ownsController;
   DeliveryMethod delivery = DeliveryMethod.email;
   bool delivering = false;
+  Object? _announcedPayload;
 
   @override
   void initState() {
     super.initState();
     _ownsController = widget.controller == null;
     controller = widget.controller ?? DownloadController();
+    controller.addListener(_handleControllerChange);
     controller.start();
   }
 
   @override
   void dispose() {
+    controller.removeListener(_handleControllerChange);
     if (_ownsController) controller.dispose();
     super.dispose();
+  }
+
+  void _handleControllerChange() {
+    final payload = controller.payload;
+    if (controller.phase == DownloadPhase.ready &&
+        payload != null &&
+        !identical(payload, _announcedPayload)) {
+      _announcedPayload = payload;
+      unawaited(_beepAndPrompt());
+    }
+  }
+
+  Future<void> _beepAndPrompt() async {
+    unawaited(_playCompletionSound());
+    if (!mounted) return;
+    final sendNow = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.check_circle_outline),
+        title: const Text('Download complete'),
+        content: const Text('The RPB file is ready. Send the email now?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Later'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.send),
+            label: const Text('Send email'),
+          ),
+        ],
+      ),
+    );
+    if (sendNow == true) await _deliver();
+  }
+
+  Future<void> _playCompletionSound() async {
+    final player = AudioPlayer();
+    try {
+      await player.play(AssetSource('beep.wav'));
+      unawaited(player.onPlayerComplete.first
+          .timeout(const Duration(seconds: 5))
+          .catchError((_) {})
+          .whenComplete(player.dispose));
+    } catch (_) {
+      // A missing audio device must not prevent delivery of a valid download.
+      await player.dispose();
+    }
   }
 
   String get _suggestedName {
@@ -126,6 +181,14 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                     Text(controller.detail,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge),
+                    if (Platform.isIOS) ...[
+                      const SizedBox(height: 16),
+                      const Text(
+                        'iPhone and iPad cannot access the logger’s current USB CDC export. '
+                        'The logger needs BLE, network, or Apple External Accessory support.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                     if (controller.phase == DownloadPhase.downloading) ...[
                       const SizedBox(height: 24),
                       LinearProgressIndicator(value: controller.progress),

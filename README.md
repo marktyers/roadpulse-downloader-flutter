@@ -1,7 +1,7 @@
 # RoadPulse Downloader (Flutter)
 
 Cross-platform replacement for the native RoadPulse Downloader. It targets
-macOS, Windows, and Android and keeps USB capture read-only: the application
+macOS, Windows, Android, and iOS and keeps USB capture read-only: the application
 never sends a command to the logger and never modifies its flash.
 
 ## User workflow
@@ -21,9 +21,10 @@ the final send/consent step. Fully unattended sending would require a separately
 authenticated RoadPulse mail service; credentials are never embedded in this
 application.
 
-The supplied `assets/beep.wav` is bundled for the intended hands-off completion
-signal. It must only be played after an authenticated delivery endpoint confirms
-success; returning from an email composer is not proof that the message was sent.
+The supplied `assets/beep.wav` plays once the download has completed and the RPB
+has passed every integrity check. The app then asks whether to send the email;
+confirming opens the pre-addressed draft with the RPB attached. The sound means
+the logger can be unplugged—it does not claim that an email has already been sent.
 
 ## Initial platform generation
 
@@ -32,7 +33,7 @@ An attempted SDK install could not unpack because the disk had only 186 MB free.
 After installing Flutter 3.29 or newer, run this once from the project root:
 
 ```sh
-flutter create --platforms=macos,windows,android --org uk.co.roadpulse .
+flutter create --platforms=macos,windows,android,ios --org uk.co.roadpulse .
 flutter pub get
 ```
 
@@ -49,6 +50,7 @@ flutter run -d macos
 flutter build macos --release
 flutter build windows --release
 flutter build apk --release
+flutter build ios --release
 ```
 
 Windows builds must run on Windows. macOS builds must run on macOS.
@@ -94,6 +96,17 @@ Windows builds must run on Windows. macOS builds must run on macOS.
 - Set Android `minSdk` to at least 21 if the generated project is lower.
 - No storage permission is required: the attachment is staged in app-private
   temporary storage and shared using the platform's secure content provider.
+
+### iOS
+
+- The iOS runner and email/audio UI are included, but the logger's current USB
+  CDC serial interface is not accessible to an ordinary iPhone/iPad app.
+- A functional iOS downloader requires a logger firmware/hardware transport
+  supported by iOS: BLE, a network protocol, or Apple's External Accessory/MFi
+  programme. The app shows this limitation instead of attempting desktop serial
+  access at runtime.
+- Building requires full Xcode. Device installation and distribution require an
+  Apple Development/Distribution team and the usual signing profiles.
 
 ## Design
 

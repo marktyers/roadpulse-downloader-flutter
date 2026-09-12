@@ -21,8 +21,22 @@ abstract interface class LoggerTransport {
   Future<List<LoggerDevice>> devices();
   Future<LoggerConnection> connect(LoggerDevice device);
 
-  factory LoggerTransport.forCurrentPlatform() =>
-      Platform.isAndroid ? AndroidLoggerTransport() : DesktopLoggerTransport();
+  factory LoggerTransport.forCurrentPlatform() => Platform.isAndroid
+      ? AndroidLoggerTransport()
+      : Platform.isMacOS || Platform.isWindows
+          ? DesktopLoggerTransport()
+          : UnsupportedLoggerTransport();
+}
+
+final class UnsupportedLoggerTransport implements LoggerTransport {
+  @override
+  Future<List<LoggerDevice>> devices() async => const [];
+
+  @override
+  Future<LoggerConnection> connect(LoggerDevice device) {
+    throw UnsupportedError(
+        'Direct USB serial access is unavailable on this platform.');
+  }
 }
 
 final class DesktopLoggerTransport implements LoggerTransport {
