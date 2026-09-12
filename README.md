@@ -11,12 +11,19 @@ never sends a command to the logger and never modifies its flash.
    automatically; when several serial devices exist, choose one from the list.
 3. Wait for the length-framed download and RPB validation to finish.
 4. On macOS or Windows choose **Email** (the default) or **Save locally**, then
-   click the delivery button. On Android tap **Create email**. The system share
-   chooser opens with the validated `.rpb` attached; choose an email app.
+   click the delivery button. On Android tap **Create email**. On macOS and
+   Android a pre-addressed draft opens with the validated `.rpb` attached and
+   the logger ID as its subject; the destination is deliberately hidden from
+   the application UI. Windows opens its system attachment share flow.
 
-The proposed filename is `RP-XXXXXX-yyyy-MM-dd-HHmmss.rpb`. Email apps control
-the final draft UI. A portable app cannot silently create an attachment using a
-`mailto:` URL, so the operating-system share sheet is used.
+The proposed filename is `RP-XXXXXX-yyyy-MM-dd-HHmmss.rpb`. Email apps retain
+the final send/consent step. Fully unattended sending would require a separately
+authenticated RoadPulse mail service; credentials are never embedded in this
+application.
+
+The supplied `assets/beep.wav` is bundled for the intended hands-off completion
+signal. It must only be played after an authenticated delivery endpoint confirms
+success; returning from an email composer is not proof that the message was sent.
 
 ## Initial platform generation
 
