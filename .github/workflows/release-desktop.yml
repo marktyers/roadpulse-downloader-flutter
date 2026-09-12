@@ -17,6 +17,8 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Install serial-port build dependencies
+        run: brew install automake libtool
       - run: flutter pub get
       - name: Build macOS application
         env:
