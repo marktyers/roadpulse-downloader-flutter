@@ -1,0 +1,25 @@
+name: roadpulse_downloader
+description: Cross-platform downloader for RoadPulse Logger RPB snapshots.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  cross_file: ^0.3.4+2
+  flutter:
+    sdk: flutter
+  file_selector: ^1.0.3
+  flutter_libserialport: ^0.6.0
+  path_provider: ^2.1.5
+  share_plus: ^11.0.0
+  usb_serial: ^0.5.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
