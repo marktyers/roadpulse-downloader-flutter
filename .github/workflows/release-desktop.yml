@@ -18,7 +18,10 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter build macos --release
+      - name: Build macOS application
+        env:
+          DELIVERY_EMAIL: ${{ secrets.DELIVERY_EMAIL }}
+        run: flutter build macos --release --dart-define=DELIVERY_EMAIL="$DELIVERY_EMAIL"
       - name: Package macOS application
         run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/roadpulse_downloader.app RoadPulse-Downloader-macOS.zip
       - uses: actions/upload-artifact@v4
@@ -35,7 +38,11 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter build windows --release
+      - name: Build Windows application
+        shell: pwsh
+        env:
+          DELIVERY_EMAIL: ${{ secrets.DELIVERY_EMAIL }}
+        run: flutter build windows --release --dart-define=DELIVERY_EMAIL="$env:DELIVERY_EMAIL"
       - name: Package Windows application
         shell: pwsh
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath RoadPulse-Downloader-Windows.zip

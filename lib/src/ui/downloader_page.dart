@@ -125,6 +125,10 @@ final class _DownloaderPageState extends State<DownloaderPage> {
           }
         }
       } else {
+        if (AppConfiguration.emailRecipient.isEmpty) {
+          throw StateError(
+              'The delivery email is not configured in this build.');
+        }
         final temporary = await getTemporaryDirectory();
         final file = File('${temporary.path}/$_suggestedName');
         await file.writeAsBytes(bytes, flush: true);

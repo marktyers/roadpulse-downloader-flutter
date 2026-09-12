@@ -46,7 +46,9 @@ jobs:
       - run: flutter analyze
       - run: flutter test --reporter compact
       - name: Build signed app bundle
-        run: flutter build appbundle --release
+        env:
+          DELIVERY_EMAIL: ${{ secrets.DELIVERY_EMAIL }}
+        run: flutter build appbundle --release --dart-define=DELIVERY_EMAIL="$DELIVERY_EMAIL"
       - name: Upload app bundle artifact
         uses: actions/upload-artifact@v4
         with:

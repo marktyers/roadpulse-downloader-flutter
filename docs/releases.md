@@ -29,6 +29,8 @@ Create a protected GitHub environment named `google-play` and add:
 - `ANDROID_KEY_PASSWORD`: upload-key password.
 - `ANDROID_KEY_ALIAS`: upload-key alias.
 - `PLAY_SERVICE_ACCOUNT_JSON`: complete Google Play service-account JSON.
+- `DELIVERY_EMAIL`: fixed recipient compiled into release applications. Store it
+  as a repository secret as well so desktop release jobs can use it.
 
 Grant the service account release permissions for the Play Console application.
 Run **Publish Android to Play Store** manually and begin with the `internal`
