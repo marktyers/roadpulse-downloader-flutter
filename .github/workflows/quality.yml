@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   analyze-and-test:
@@ -26,5 +27,11 @@ jobs:
         run: dart format --output=none --set-exit-if-changed lib test
       - name: Analyze
         run: flutter analyze
-      - name: Test
-        run: flutter test --reporter compact
+      - name: Test with coverage
+        run: flutter test --coverage --reporter compact
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5.5.2
+        with:
+          files: coverage/lcov.info
+          use_oidc: true
+          fail_ci_if_error: false

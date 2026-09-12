@@ -1,129 +1,114 @@
-# RoadPulse Downloader (Flutter)
+# RoadPulse Downloader
 
-Cross-platform replacement for the native RoadPulse Downloader. Its supported
-release targets are macOS, Windows, and Android. USB capture remains read-only:
-the application
-never sends a command to the logger and never modifies its flash.
+[![Quality](https://github.com/marktyers/roadpulse-downloader-flutter/actions/workflows/quality.yml/badge.svg)](https://github.com/marktyers/roadpulse-downloader-flutter/actions/workflows/quality.yml)
+[![Coverage](https://codecov.io/gh/marktyers/roadpulse-downloader-flutter/graph/badge.svg)](https://codecov.io/gh/marktyers/roadpulse-downloader-flutter)
+[![Latest release](https://img.shields.io/github/v/release/marktyers/roadpulse-downloader-flutter)](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest)
 
-## User workflow
+RoadPulse Downloader transfers `.rpb` recordings from a RoadPulse Logger. It
+automatically finds a connected logger, downloads and validates its recording,
+then helps you email or save the file.
 
-1. Start the app before plugging in the RoadPulse Logger.
-2. Connect the logger by USB. A single likely logger is selected and connected
-   automatically; when several serial devices exist, choose one from the list.
-3. Wait for the length-framed download and RPB validation to finish.
-4. On macOS or Windows choose **Email** (the default) or **Save locally**, then
-   click the delivery button. On Android tap **Create email**. On macOS and
-   Android a pre-addressed draft opens with the validated `.rpb` attached and
-   the logger ID as its subject; the destination is deliberately hidden from
-   the application UI. Windows opens its system attachment share flow.
+## Download
 
-The proposed filename is `RP-XXXXXX-yyyy-MM-dd-HHmmss.rpb`. Email apps retain
-the final send/consent step. Fully unattended sending would require a separately
-authenticated RoadPulse mail service; credentials are never embedded in this
-application.
+| Platform | Download |
+| --- | --- |
+| macOS 13 or newer | [Download RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) |
+| Windows 10 or 11 | [Download RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) |
+| Android | Coming soon through Google Play |
 
-The supplied `assets/beep.wav` plays once the download has completed and the RPB
-has passed every integrity check. The app then asks whether to send the email;
-confirming opens the pre-addressed draft with the RPB attached. The sound means
-the logger can be unplugged—it does not claim that an email has already been sent.
+All published versions and release notes are on the
+[RoadPulse Downloader releases page](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest).
 
-## Initial platform generation
+## Install on macOS
 
-Flutter was not installed on the development Mac when this project was created.
-An attempted SDK install could not unpack because the disk had only 186 MB free.
-After installing Flutter 3.29 or newer, run this once from the project root:
+1. Download **RoadPulse-Downloader-macOS.zip** using the link above.
+2. Open the downloaded ZIP file.
+3. Drag `roadpulse_downloader` into your **Applications** folder.
+4. Open the app from **Applications**.
+
+The current preview release is not yet signed and notarised by Apple. The first
+time you open it, macOS may say that Apple could not verify it:
+
+1. Click **Done** on the warning.
+2. Open **System Settings**, select **Privacy & Security**, then scroll down to
+   **Security**.
+3. Click **Open Anyway** beside `roadpulse_downloader`.
+4. Enter your Mac password and confirm **Open**.
+
+macOS remembers this choice, so it is normally required only once per downloaded
+version. Only approve an app obtained from the official download link above.
+
+## Install on Windows
+
+1. Download **RoadPulse-Downloader-Windows.zip** using the link above.
+2. Right-click the ZIP file, select **Extract All**, then choose a permanent
+   location such as your Documents folder.
+3. Keep all the extracted files together and open
+   `roadpulse_downloader.exe` from that folder.
+4. Optionally right-click the program and choose **Pin to Start** or create a
+   shortcut.
+
+The current preview release is not digitally signed. If Microsoft Defender
+SmartScreen appears, check that the file came from this repository, select
+**More info**, then **Run anyway**. No administrator access or firewall change
+is required.
+
+## Download a recording
+
+1. Open RoadPulse Downloader before connecting the logger.
+2. Plug the RoadPulse Logger into the computer by USB.
+3. Wait while the app discovers the logger and downloads the recording. If more
+   than one serial device is connected, select the logger from the list.
+4. Wait for the beep. The beep means the `.rpb` file has been completely
+   downloaded and passed its integrity checks; the logger can now be unplugged.
+5. Confirm the prompt to create the email. Your email program opens with the
+   `.rpb` file attached, the logger serial number as the subject, and the
+   RoadPulse delivery address filled in. Review it and press **Send**.
+
+On macOS and Windows, **Email** is selected by default. Select **Save locally**
+before connecting the logger if you want to choose a folder instead. The app
+only reads from the logger and does not modify its storage.
+
+## Troubleshooting
+
+- **The logger is not detected:** unplug it, close the app, reopen the app and
+  reconnect it. Try another data-capable USB cable or USB port if necessary.
+- **Several devices are listed:** choose the port that appeared after plugging
+  in the logger. On Windows this is shown as a COM port.
+- **No email window appears:** make sure a default email application is
+  configured. The validated file remains available in the app, where it can be
+  saved locally and attached manually.
+- **The beep sounds but no message was sent:** the beep confirms the download,
+  not email delivery. The final email is sent only after you approve it in your
+  email application.
+- **macOS blocks the app:** follow the **Open Anyway** instructions in the macOS
+  installation section above.
+- **Windows blocks the app:** use **More info → Run anyway** only after confirming
+  that it was downloaded from the official link above.
+
+## For developers
+
+The shared Dart implementation is divided into protocol validation, transport,
+download control, and adaptive UI layers. Desktop loggers use USB serial;
+Android uses USB host mode and requires an OTG adapter. iOS is not currently a
+supported target because an ordinary iPhone or iPad app cannot access the
+logger's USB CDC serial interface.
+
+Every push and pull request checks formatting, performs static analysis, and
+runs the complete unit, regression, controller, and UI test suites with coverage.
+Version tags build the macOS and Windows downloads. Android deployment uses a
+protected manual Google Play workflow.
+
+See [the protocol documentation](docs/protocol.md) for the behaviour preserved
+from the original macOS utility and [the release guide](docs/releases.md) for
+build, signing, platform permission, and Google Play requirements.
 
 ```sh
-flutter create --platforms=macos,windows,android,ios --org uk.co.roadpulse .
 flutter pub get
-```
-
-Keep the existing `lib`, `test`, `pubspec.yaml`, `README.md`, and `docs` files if
-Flutter asks about conflicts. The command generates only the standard native
-runner projects and plugin registrants.
-
-## Verify and build
-
-```sh
 flutter analyze
-flutter test
-flutter run -d macos
-flutter build macos --release
-flutter build windows --release
-flutter build apk --release
+flutter test --coverage
 ```
 
-Windows builds must run on Windows. macOS builds must run on macOS.
-
-## Platform requirements
-
-### macOS
-
-- Xcode with Command Line Tools, CocoaPods, and Flutter desktop support.
-- Minimum deployment target: macOS 13.
-- Direct serial access must be permitted. Add the following entitlement to both
-  `macos/Runner/DebugProfile.entitlements` and `Release.entitlements`:
-
-```xml
-<key>com.apple.security.device.serial</key>
-<true/>
-```
-
-  A direct-distribution build may instead disable App Sandbox, matching the
-  existing non-sandboxed app. Test the entitlement/signing route before a Mac
-  App Store submission.
-- The `flutter_libserialport` package bundles libserialport. Signing and
-  notarisation must include all bundled native libraries.
-
-### Windows
-
-- Windows 10/11, Visual Studio 2022 with **Desktop development with C++**,
-  the Windows 10/11 SDK, CMake, and Flutter desktop support.
-- The logger must enumerate as a COM port. Modern USB CDC ACM devices normally
-  use the inbox `usbser.sys` driver; otherwise install the logger/vendor INF.
-- No network capability, firewall exception, or administrator access is needed.
-
-### Android
-
-- Android Studio/SDK, USB host capable phone/tablet, and an OTG cable/adapter.
-- The app requests USB-device permission through Android's system dialog.
-- Ensure the generated `android/app/src/main/AndroidManifest.xml` contains:
-
-```xml
-<uses-feature android:name="android.hardware.usb.host" android:required="true" />
-```
-
-- Set Android `minSdk` to at least 21 if the generated project is lower.
-- No storage permission is required: the attachment is staged in app-private
-  temporary storage and shared using the platform's secure content provider.
-
-### Deferred iOS target
-
-- The iOS runner is retained for possible future work, but iOS is not currently
-  a supported release target. The logger's current USB
-  CDC serial interface is not accessible to an ordinary iPhone/iPad app.
-- A functional iOS downloader requires a logger firmware/hardware transport
-  supported by iOS: BLE, a network protocol, or Apple's External Accessory/MFi
-  programme. The app shows this limitation instead of attempting desktop serial
-  access at runtime.
-- Building requires full Xcode. Device installation and distribution require an
-  Apple Development/Distribution team and the usual signing profiles.
-
-## Design
-
-- `lib/src/protocol`: pure Dart framing and RPB validation, shared everywhere.
-- `lib/src/transport`: desktop serial and Android USB implementations.
-- `lib/src/download_controller.dart`: discovery, timeout, progress, and state.
-- `lib/src/ui`: adaptive Material desktop/mobile workflow and delivery.
-- `test`: framing and validation regression tests ported from the Swift app.
-
-See [docs/protocol.md](docs/protocol.md) for the exact reverse-engineered
-behaviour of the original macOS utility.
-
-## Automated releases
-
-GitHub Actions checks every push and pull request. Version tags build downloadable
-macOS and Windows ZIP files and publish a GitHub Release. A separately protected,
-manual workflow builds a signed Android App Bundle and deploys it to a selected
-Google Play track. See [docs/releases.md](docs/releases.md) for setup, required
-secrets, signing limitations, and the recommended internal-track rollout.
+macOS builds require macOS with Xcode, CocoaPods, automake, and libtool. Windows
+builds require Windows with Visual Studio's **Desktop development with C++**
+workload. The logger must appear as a serial/COM device.

@@ -4,6 +4,7 @@
 .metadata
 .packages
 build/
+coverage/
 *.iml
 android/.gradle/
 macos/Flutter/ephemeral/
