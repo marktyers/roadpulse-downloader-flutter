@@ -11,6 +11,20 @@ void main() {
       final info = RpbValidator.validate(validRpb());
       expect(info.deviceId, 'RP-8FCBA4');
       expect(info.recordCount, 0);
+      expect(info.earliestRecordDate, isNull);
+      expect(info.latestRecordDate, isNull);
+    });
+    test('finds the earliest and latest record dates in any record order', () {
+      final info = RpbValidator.validate(validRpb(
+        sequences: [41, 42, 43],
+        recordDates: [
+          DateTime.utc(2026, 8, 18),
+          DateTime.utc(2026, 6, 23),
+          DateTime.utc(2026, 7, 10),
+        ],
+      ));
+      expect(info.earliestRecordDate, DateTime.utc(2026, 6, 23));
+      expect(info.latestRecordDate, DateTime.utc(2026, 8, 18));
     });
     test('validates records and manifest sequence bounds', () {
       expect(

@@ -63,7 +63,11 @@ final class _DownloaderPageState extends State<DownloaderPage> {
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.check_circle_outline),
         title: const Text('Download complete'),
-        content: const Text('The RPB file is ready. Send the email now?'),
+        content: Text(
+          'Recording dates\n$_recordDateRange\n\n'
+          'The RPB file is ready. Send the email now?',
+          textAlign: TextAlign.center,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -100,6 +104,34 @@ final class _DownloaderPageState extends State<DownloaderPage> {
     final stamp = '${now.year}-${two(now.month)}-${two(now.day)}-'
         '${two(now.hour)}${two(now.minute)}${two(now.second)}';
     return '${controller.info?.deviceId ?? 'RP-UNKNOWN'}-$stamp.rpb';
+  }
+
+  String get _recordDateRange {
+    final earliest = controller.info?.earliestRecordDate;
+    final latest = controller.info?.latestRecordDate;
+    if (earliest == null || latest == null) {
+      return 'No dated records in this download';
+    }
+    if (earliest == latest) return _formatDate(earliest);
+    return '${_formatDate(earliest)} – ${_formatDate(latest)}';
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   Future<void> _deliver() async {
@@ -219,9 +251,19 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                               : controller.connect,
                           child: const Text('Connect')),
                     ],
+                    if (controller.phase == DownloadPhase.ready) ...[
+                      const SizedBox(height: 22),
+                      Card(
+                        child: ListTile(
+                          leading: const Icon(Icons.date_range),
+                          title: const Text('Recording dates'),
+                          subtitle: Text(_recordDateRange),
+                        ),
+                      ),
+                    ],
                     if (!Platform.isAndroid &&
                         controller.phase == DownloadPhase.ready) ...[
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 12),
                       SegmentedButton<DeliveryMethod>(
                         segments: const [
                           ButtonSegment(

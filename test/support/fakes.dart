@@ -48,7 +48,12 @@ Uint8List framed(List<int> payload) {
   return Uint8List.fromList(result.toString().codeUnits);
 }
 
-Uint8List validRpb({int deviceId = 0x8fcba4, List<int> sequences = const []}) {
+Uint8List validRpb({
+  int deviceId = 0x8fcba4,
+  List<int> sequences = const [],
+  List<DateTime>? recordDates,
+}) {
+  assert(recordDates == null || recordDates.length == sequences.length);
   final data = Uint8List(80 + sequences.length * 41);
   final view = ByteData.sublistView(data);
   view.setUint32(0, 0x48425052, Endian.little);
@@ -63,7 +68,13 @@ Uint8List validRpb({int deviceId = 0x8fcba4, List<int> sequences = const []}) {
     view.setUint32(68, sequences.first, Endian.little);
     view.setUint32(72, sequences.last, Endian.little);
     for (var index = 0; index < sequences.length; index++) {
-      view.setUint32(80 + index * 41, sequences[index], Endian.little);
+      final offset = 80 + index * 41;
+      view.setUint32(offset, sequences[index], Endian.little);
+      if (recordDates != null) {
+        final days =
+            recordDates[index].toUtc().difference(DateTime.utc(2020)).inDays;
+        view.setUint16(offset + 4, days, Endian.little);
+      }
     }
   }
   view.setUint32(60, crc32(data.sublist(0, 60)), Endian.little);

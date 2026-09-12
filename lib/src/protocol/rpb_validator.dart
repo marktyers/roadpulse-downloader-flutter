@@ -8,9 +8,16 @@ final class RpbValidationException implements Exception {
 }
 
 final class RpbInfo {
-  const RpbInfo({required this.deviceId, required this.recordCount});
+  const RpbInfo({
+    required this.deviceId,
+    required this.recordCount,
+    this.earliestRecordDate,
+    this.latestRecordDate,
+  });
   final String deviceId;
   final int recordCount;
+  final DateTime? earliestRecordDate;
+  final DateTime? latestRecordDate;
 }
 
 abstract final class RpbValidator {
@@ -43,6 +50,8 @@ abstract final class RpbValidator {
       throw const RpbValidationException(
           'The RPB manifest checksum is invalid.');
     }
+    DateTime? earliestRecordDate;
+    DateTime? latestRecordDate;
     if (count > 0) {
       final first = view.getUint32(80, Endian.little);
       final last = view.getUint32(80 + (count - 1) * recordSize, Endian.little);
@@ -51,13 +60,30 @@ abstract final class RpbValidator {
         throw const RpbValidationException(
             'Manifest sequence bounds do not match the records.');
       }
+      final epoch = DateTime.utc(2020);
+      for (var index = 0; index < count; index++) {
+        final offset = 80 + index * recordSize;
+        final date = epoch
+            .add(Duration(days: view.getUint16(offset + 4, Endian.little)));
+        if (earliestRecordDate == null || date.isBefore(earliestRecordDate)) {
+          earliestRecordDate = date;
+        }
+        if (latestRecordDate == null || date.isAfter(latestRecordDate)) {
+          latestRecordDate = date;
+        }
+      }
     }
     final id = view
         .getUint32(12, Endian.little)
         .toRadixString(16)
         .toUpperCase()
         .padLeft(6, '0');
-    return RpbInfo(deviceId: 'RP-$id', recordCount: count);
+    return RpbInfo(
+      deviceId: 'RP-$id',
+      recordCount: count,
+      earliestRecordDate: earliestRecordDate,
+      latestRecordDate: latestRecordDate,
+    );
   }
 
   static int _crc32(List<int> bytes) {

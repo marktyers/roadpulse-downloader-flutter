@@ -53,14 +53,20 @@ void main() {
     final transport = FakeLoggerTransport();
     final controller = DownloadController(transport: transport);
     await _pumpConnected(tester, controller, transport);
-    transport.stream.add(framed(validRpb(sequences: [100, 101])));
+    transport.stream.add(framed(validRpb(
+      sequences: [100, 101],
+      recordDates: [DateTime.utc(2026, 6, 23), DateTime.utc(2026, 8, 18)],
+    )));
     await tester.pump();
     await tester.pump();
     expect(find.text('Download ready'), findsOneWidget);
     expect(find.text('Download complete'), findsOneWidget);
+    expect(find.text('23 June 2026 – 18 August 2026'), findsOneWidget);
     expect(find.text('Send email'), findsOneWidget);
     await tester.tap(find.text('Later'));
     await tester.pump();
+    expect(find.text('Recording dates'), findsOneWidget);
+    expect(find.text('23 June 2026 – 18 August 2026'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Save locally'), findsOneWidget);
     expect(find.text('Create email'), findsOneWidget);

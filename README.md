@@ -61,6 +61,8 @@ is required.
    than one serial device is connected, select the logger from the list.
 4. Wait for the beep. The beep means the `.rpb` file has been completely
    downloaded and passed its integrity checks; the logger can now be unplugged.
+   The app shows the earliest and latest recording dates, including the year,
+   so you can confirm that the logger has been recording recently.
 5. Confirm the prompt to create the email. Your email program opens with the
    `.rpb` file attached, the logger serial number as the subject, and the
    RoadPulse delivery address filled in. Review it and press **Send**.
