@@ -1,7 +1,8 @@
 # RoadPulse Downloader (Flutter)
 
-Cross-platform replacement for the native RoadPulse Downloader. It targets
-macOS, Windows, Android, and iOS and keeps USB capture read-only: the application
+Cross-platform replacement for the native RoadPulse Downloader. Its supported
+release targets are macOS, Windows, and Android. USB capture remains read-only:
+the application
 never sends a command to the logger and never modifies its flash.
 
 ## User workflow
@@ -50,7 +51,6 @@ flutter run -d macos
 flutter build macos --release
 flutter build windows --release
 flutter build apk --release
-flutter build ios --release
 ```
 
 Windows builds must run on Windows. macOS builds must run on macOS.
@@ -97,9 +97,10 @@ Windows builds must run on Windows. macOS builds must run on macOS.
 - No storage permission is required: the attachment is staged in app-private
   temporary storage and shared using the platform's secure content provider.
 
-### iOS
+### Deferred iOS target
 
-- The iOS runner and email/audio UI are included, but the logger's current USB
+- The iOS runner is retained for possible future work, but iOS is not currently
+  a supported release target. The logger's current USB
   CDC serial interface is not accessible to an ordinary iPhone/iPad app.
 - A functional iOS downloader requires a logger firmware/hardware transport
   supported by iOS: BLE, a network protocol, or Apple's External Accessory/MFi
@@ -118,3 +119,11 @@ Windows builds must run on Windows. macOS builds must run on macOS.
 
 See [docs/protocol.md](docs/protocol.md) for the exact reverse-engineered
 behaviour of the original macOS utility.
+
+## Automated releases
+
+GitHub Actions checks every push and pull request. Version tags build downloadable
+macOS and Windows ZIP files and publish a GitHub Release. A separately protected,
+manual workflow builds a signed Android App Bundle and deploys it to a selected
+Google Play track. See [docs/releases.md](docs/releases.md) for setup, required
+secrets, signing limitations, and the recommended internal-track rollout.
