@@ -1,0 +1,83 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:roadpulse_downloader/src/download_controller.dart';
+import 'package:roadpulse_downloader/src/transport/logger_transport.dart';
+import 'package:roadpulse_downloader/src/ui/downloader_page.dart';
+
+import 'support/fakes.dart';
+
+void main() {
+  testWidgets('shows the waiting state with no USB device', (tester) async {
+    final transport = FakeLoggerTransport(devices: const []);
+    final controller = DownloadController(transport: transport);
+    await tester.pumpWidget(_app(controller)); await tester.pump();
+    expect(find.text('Open this app, then plug in the RoadPulse logger.'), findsOneWidget);
+    expect(find.textContaining('Read-only download'), findsOneWidget);
+    await _dispose(tester, controller, transport);
+  });
+
+  testWidgets('offers a chooser when serial-device discovery is ambiguous', (tester) async {
+    final transport = FakeLoggerTransport(devices: const [
+      LoggerDevice('COM1', 'Generic serial', 'COM1'),
+      LoggerDevice('COM2', 'Debug adapter', 'COM2'),
+    ]);
+    final controller = DownloadController(transport: transport);
+    await tester.pumpWidget(_app(controller)); await tester.pump();
+    expect(find.text('Serial device'), findsOneWidget);
+    expect(find.text('Connect'), findsOneWidget);
+    expect(transport.connected, isFalse);
+    await _dispose(tester, controller, transport);
+  });
+
+  testWidgets('shows determinate progress while bytes arrive', (tester) async {
+    final transport = FakeLoggerTransport();
+    final controller = DownloadController(transport: transport);
+    await tester.pumpWidget(_app(controller)); await tester.pump();
+    final frame = framed(validRpb());
+    transport.stream.add(Uint8List.fromList(frame.sublist(0, frame.length ~/ 2)));
+    await tester.pump();
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.textContaining('Downloading:'), findsOneWidget);
+    await _dispose(tester, controller, transport);
+  });
+
+  testWidgets('defaults desktop delivery to email and can toggle local save', (tester) async {
+    final transport = FakeLoggerTransport();
+    final controller = DownloadController(transport: transport);
+    await tester.pumpWidget(_app(controller)); await tester.pump();
+    transport.stream.add(framed(validRpb(sequences: [100, 101]))); await tester.pump();
+    expect(find.text('Download ready'), findsOneWidget);
+    expect(find.text('Email'), findsOneWidget);
+    expect(find.text('Save locally'), findsOneWidget);
+    expect(find.text('Create email'), findsOneWidget);
+    await tester.tap(find.text('Save locally')); await tester.pump();
+    expect(find.text('Save RPB'), findsOneWidget);
+    await tester.tap(find.text('Email')); await tester.pump();
+    expect(find.text('Create email'), findsOneWidget);
+    await _dispose(tester, controller, transport);
+  });
+
+  testWidgets('never enables delivery for a corrupt RPB', (tester) async {
+    final transport = FakeLoggerTransport();
+    final controller = DownloadController(transport: transport);
+    await tester.pumpWidget(_app(controller)); await tester.pump();
+    final corrupt = validRpb()..[25] ^= 1;
+    transport.stream.add(framed(corrupt)); await tester.pump();
+    expect(find.text('Download failed'), findsOneWidget);
+    expect(find.text('Create email'), findsNothing);
+    expect(find.text('Save RPB'), findsNothing);
+    expect(find.text('Try again'), findsOneWidget);
+    await _dispose(tester, controller, transport);
+  });
+}
+
+Widget _app(DownloadController controller) => MaterialApp(home: DownloaderPage(controller: controller));
+
+Future<void> _dispose(WidgetTester tester, DownloadController controller,
+    FakeLoggerTransport transport) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  controller.dispose();
+  await transport.dispose();
+}

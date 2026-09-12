@@ -12,21 +12,28 @@ import '../transport/logger_transport.dart';
 enum DeliveryMethod { email, localSave }
 
 final class DownloaderPage extends StatefulWidget {
-  const DownloaderPage({super.key});
+  const DownloaderPage({super.key, this.controller});
+  final DownloadController? controller;
   @override
   State<DownloaderPage> createState() => _DownloaderPageState();
 }
 
 final class _DownloaderPageState extends State<DownloaderPage> {
   late final DownloadController controller;
+  late final bool _ownsController;
   DeliveryMethod delivery = DeliveryMethod.email;
   bool delivering = false;
 
   @override
-  void initState() { super.initState(); controller = DownloadController()..start(); }
+  void initState() {
+    super.initState();
+    _ownsController = widget.controller == null;
+    controller = widget.controller ?? DownloadController();
+    controller.start();
+  }
 
   @override
-  void dispose() { controller.dispose(); super.dispose(); }
+  void dispose() { if (_ownsController) controller.dispose(); super.dispose(); }
 
   String get _suggestedName {
     final now = DateTime.now();
