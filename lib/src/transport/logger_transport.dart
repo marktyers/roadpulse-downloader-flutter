@@ -32,8 +32,11 @@ final class DesktopLoggerTransport implements LoggerTransport {
       final port = SerialPort(address);
       try {
         final details = [port.description, port.manufacturer]
-            .whereType<String>().where((value) => value.isNotEmpty).join(' — ');
-        return LoggerDevice(address, details.isEmpty ? address : '$address — $details', address);
+            .whereType<String>()
+            .where((value) => value.isNotEmpty)
+            .join(' — ');
+        return LoggerDevice(address,
+            details.isEmpty ? address : '$address — $details', address);
       } finally {
         port.dispose();
       }
@@ -44,7 +47,8 @@ final class DesktopLoggerTransport implements LoggerTransport {
   Future<LoggerConnection> connect(LoggerDevice device) async {
     final port = SerialPort(device.nativeDevice as String);
     if (!port.openReadWrite()) {
-      final message = SerialPort.lastError?.message ?? 'Unknown serial-port error';
+      final message =
+          SerialPort.lastError?.message ?? 'Unknown serial-port error';
       port.dispose();
       throw StateError('Could not open ${device.id}: $message');
     }
@@ -67,19 +71,31 @@ final class _DesktopConnection implements LoggerConnection {
   @override
   Stream<Uint8List> get bytes => _reader.stream;
   @override
-  Future<void> close() async { _reader.close(); _port.close(); _port.dispose(); }
+  Future<void> close() async {
+    _reader.close();
+    _port.close();
+    _port.dispose();
+  }
 }
 
 final class AndroidLoggerTransport implements LoggerTransport {
   @override
   Future<List<LoggerDevice>> devices() async {
     final devices = await UsbSerial.listDevices();
-    return devices.map((device) => LoggerDevice(
-      '${device.vid ?? 0}:${device.pid ?? 0}:${device.deviceId}',
-      [device.productName, device.manufacturerName, 'USB ${device.deviceId}']
-          .whereType<String>().where((value) => value.isNotEmpty).join(' — '),
-      device,
-    )).toList();
+    return devices
+        .map((device) => LoggerDevice(
+              '${device.vid ?? 0}:${device.pid ?? 0}:${device.deviceId}',
+              [
+                device.productName,
+                device.manufacturerName,
+                'USB ${device.deviceId}'
+              ]
+                  .whereType<String>()
+                  .where((value) => value.isNotEmpty)
+                  .join(' — '),
+              device,
+            ))
+        .toList();
   }
 
   @override
@@ -87,10 +103,11 @@ final class AndroidLoggerTransport implements LoggerTransport {
     final usbDevice = device.nativeDevice as UsbDevice;
     final port = await usbDevice.create();
     if (port == null || !await port.open()) {
-      throw StateError('USB permission was denied or the logger could not be opened.');
+      throw StateError(
+          'USB permission was denied or the logger could not be opened.');
     }
-    await port.setPortParameters(115200, UsbPort.DATABITS_8,
-        UsbPort.STOPBITS_1, UsbPort.PARITY_NONE);
+    await port.setPortParameters(
+        115200, UsbPort.DATABITS_8, UsbPort.STOPBITS_1, UsbPort.PARITY_NONE);
     await port.setDTR(false);
     await port.setRTS(false);
     return _AndroidConnection(port);

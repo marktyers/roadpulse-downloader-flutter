@@ -54,10 +54,12 @@ final class UsbFrameParser {
     final lengthStart = prefix + _beginPrefix.length;
     final lineEnd = _header.indexOf(0x0a, lengthStart);
     if (lineEnd < 0) return;
-    final text = String.fromCharCodes(_header.sublist(lengthStart, lineEnd)).trim();
+    final text =
+        String.fromCharCodes(_header.sublist(lengthStart, lineEnd)).trim();
     final expected = int.tryParse(text);
     if (expected == null || expected < 0) {
-      throw const UsbFrameException('The logger returned an invalid export length.');
+      throw const UsbFrameException(
+          'The logger returned an invalid export length.');
     }
     expectedPayloadBytes = expected;
     _header.clear();
@@ -68,7 +70,8 @@ final class UsbFrameParser {
     if (byte == 9 || byte == 10 || byte == 13 || byte == 32) return;
     final nibble = _hex(byte);
     if (nibble == null) {
-      throw const UsbFrameException('The logger returned invalid hexadecimal data.');
+      throw const UsbFrameException(
+          'The logger returned invalid hexadecimal data.');
     }
     if (_highNibble case final high?) {
       _payload.addByte((high << 4) | nibble);
@@ -82,7 +85,8 @@ final class UsbFrameParser {
 
   bool _consumeTrailer(int byte) {
     if (_highNibble != null) {
-      throw const UsbFrameException('The logger returned invalid hexadecimal data.');
+      throw const UsbFrameException(
+          'The logger returned invalid hexadecimal data.');
     }
     _trailer.add(byte);
     if (_indexOf(_trailer, _endMarker) >= 0) {
@@ -107,7 +111,10 @@ final class UsbFrameParser {
     for (var i = 0; i <= source.length - pattern.length; i++) {
       var match = true;
       for (var j = 0; j < pattern.length; j++) {
-        if (source[i + j] != pattern[j]) { match = false; break; }
+        if (source[i + j] != pattern[j]) {
+          match = false;
+          break;
+        }
       }
       if (match) return i;
     }

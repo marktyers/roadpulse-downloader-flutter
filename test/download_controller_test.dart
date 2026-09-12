@@ -15,7 +15,8 @@ void main() {
     await _settle();
     expect(transport.connected, isTrue);
     expect(controller.phase, DownloadPhase.downloading);
-    controller.dispose(); await transport.dispose();
+    controller.dispose();
+    await transport.dispose();
   });
 
   test('does not guess between multiple unknown serial devices', () async {
@@ -28,7 +29,8 @@ void main() {
     expect(transport.connected, isFalse);
     expect(controller.selectedDevice, isNull);
     expect(controller.devices, hasLength(2));
-    controller.dispose(); await transport.dispose();
+    controller.dispose();
+    await transport.dispose();
   });
 
   test('publishes incremental progress and a validated result', () async {
@@ -37,7 +39,8 @@ void main() {
     await _settle();
     final payload = validRpb(sequences: [7, 8]);
     final frame = framed(payload);
-    transport.stream.add(Uint8List.fromList(frame.sublist(0, frame.length ~/ 2)));
+    transport.stream
+        .add(Uint8List.fromList(frame.sublist(0, frame.length ~/ 2)));
     await _settle();
     expect(controller.phase, DownloadPhase.downloading);
     expect(controller.progress, greaterThan(0));
@@ -48,7 +51,8 @@ void main() {
     expect(controller.info?.recordCount, 2);
     expect(controller.payload, payload);
     expect(transport.closed, isTrue);
-    controller.dispose(); await transport.dispose();
+    controller.dispose();
+    await transport.dispose();
   });
 
   test('refuses a framed RPB whose checksum is corrupt', () async {
@@ -56,11 +60,13 @@ void main() {
     final controller = DownloadController(transport: transport)..start();
     await _settle();
     final payload = validRpb()..[20] ^= 1;
-    transport.stream.add(framed(payload)); await _settle();
+    transport.stream.add(framed(payload));
+    await _settle();
     expect(controller.phase, DownloadPhase.failed);
     expect(controller.payload, isNull);
     expect(controller.detail, contains('checksum'));
-    controller.dispose(); await transport.dispose();
+    controller.dispose();
+    await transport.dispose();
   });
 
   test('reports a serial connection error', () async {
@@ -69,7 +75,8 @@ void main() {
     await _settle();
     expect(controller.phase, DownloadPhase.failed);
     expect(controller.detail, contains('busy'));
-    controller.dispose(); await transport.dispose();
+    controller.dispose();
+    await transport.dispose();
   });
 
   testWidgets('fails after 30 seconds without incoming bytes', (tester) async {
@@ -80,7 +87,8 @@ void main() {
     await tester.pump(const Duration(seconds: 30));
     expect(controller.phase, DownloadPhase.failed);
     expect(controller.detail, contains('stopped sending data'));
-    controller.dispose(); await transport.dispose();
+    controller.dispose();
+    await transport.dispose();
   });
 }
 

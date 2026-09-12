@@ -5,12 +5,14 @@ import 'package:roadpulse_downloader/src/transport/logger_transport.dart';
 
 final class FakeLoggerTransport implements LoggerTransport {
   FakeLoggerTransport({List<LoggerDevice>? devices})
-      : listedDevices = devices ?? [const LoggerDevice('fake', 'RoadPulse CDC', 'fake')];
+      : listedDevices =
+            devices ?? [const LoggerDevice('fake', 'RoadPulse CDC', 'fake')];
   List<LoggerDevice> listedDevices;
-  final stream = StreamController<Uint8List>();
+  final stream = StreamController<Uint8List>.broadcast();
   bool connected = false;
   bool closed = false;
   Object? connectError;
+  bool get hasListener => stream.hasListener;
 
   @override
   Future<List<LoggerDevice>> devices() async => listedDevices;
@@ -38,7 +40,9 @@ Uint8List framed(List<int> payload) {
   const digits = '0123456789ABCDEF';
   final result = StringBuffer('RPB_HEX_BEGIN ${payload.length}\n');
   for (final byte in payload) {
-    result..write(digits[byte >> 4])..write(digits[byte & 15]);
+    result
+      ..write(digits[byte >> 4])
+      ..write(digits[byte & 15]);
   }
   result.write('\nRPB_HEX_END\n');
   return Uint8List.fromList(result.toString().codeUnits);

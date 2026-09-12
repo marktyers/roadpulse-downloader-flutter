@@ -13,15 +13,19 @@ void main() {
       expect(info.recordCount, 0);
     });
     test('validates records and manifest sequence bounds', () {
-      expect(RpbValidator.validate(validRpb(sequences: [41, 42, 43])).recordCount, 3);
+      expect(
+          RpbValidator.validate(validRpb(sequences: [41, 42, 43])).recordCount,
+          3);
     });
     test('keeps device IDs wider than six hexadecimal digits', () {
-      expect(RpbValidator.validate(validRpb(deviceId: 0x12345678)).deviceId, 'RP-12345678');
+      expect(RpbValidator.validate(validRpb(deviceId: 0x12345678)).deviceId,
+          'RP-12345678');
     });
     test('rejects every truncated size below the minimum', () {
       for (var size = 0; size < 80; size++) {
         expect(() => RpbValidator.validate(Uint8List(size)),
-            throwsA(isA<RpbValidationException>()), reason: 'size $size');
+            throwsA(isA<RpbValidationException>()),
+            reason: 'size $size');
       }
     });
     for (final mutation in <String, void Function(Uint8List)>{
@@ -32,8 +36,10 @@ void main() {
       'header CRC': (d) => d[20] ^= 1,
     }.entries) {
       test('rejects invalid ${mutation.key}', () {
-        final data = validRpb(); mutation.value(data);
-        expect(() => RpbValidator.validate(data), throwsA(isA<RpbValidationException>()));
+        final data = validRpb();
+        mutation.value(data);
+        expect(() => RpbValidator.validate(data),
+            throwsA(isA<RpbValidationException>()));
       });
     }
     test('rejects an incorrect exact length', () {

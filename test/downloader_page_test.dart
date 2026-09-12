@@ -12,19 +12,23 @@ void main() {
   testWidgets('shows the waiting state with no USB device', (tester) async {
     final transport = FakeLoggerTransport(devices: const []);
     final controller = DownloadController(transport: transport);
-    await tester.pumpWidget(_app(controller)); await tester.pump();
-    expect(find.text('Open this app, then plug in the RoadPulse logger.'), findsOneWidget);
+    await tester.pumpWidget(_app(controller));
+    await tester.pump();
+    expect(find.text('Open this app, then plug in the RoadPulse logger.'),
+        findsOneWidget);
     expect(find.textContaining('Read-only download'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
 
-  testWidgets('offers a chooser when serial-device discovery is ambiguous', (tester) async {
+  testWidgets('offers a chooser when serial-device discovery is ambiguous',
+      (tester) async {
     final transport = FakeLoggerTransport(devices: const [
       LoggerDevice('COM1', 'Generic serial', 'COM1'),
       LoggerDevice('COM2', 'Debug adapter', 'COM2'),
     ]);
     final controller = DownloadController(transport: transport);
-    await tester.pumpWidget(_app(controller)); await tester.pump();
+    await tester.pumpWidget(_app(controller));
+    await tester.pump();
     expect(find.text('Serial device'), findsOneWidget);
     expect(find.text('Connect'), findsOneWidget);
     expect(transport.connected, isFalse);
@@ -34,27 +38,32 @@ void main() {
   testWidgets('shows determinate progress while bytes arrive', (tester) async {
     final transport = FakeLoggerTransport();
     final controller = DownloadController(transport: transport);
-    await tester.pumpWidget(_app(controller)); await tester.pump();
+    await _pumpConnected(tester, controller, transport);
     final frame = framed(validRpb());
-    transport.stream.add(Uint8List.fromList(frame.sublist(0, frame.length ~/ 2)));
+    transport.stream
+        .add(Uint8List.fromList(frame.sublist(0, frame.length ~/ 2)));
     await tester.pump();
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
     expect(find.textContaining('Downloading:'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
 
-  testWidgets('defaults desktop delivery to email and can toggle local save', (tester) async {
+  testWidgets('defaults desktop delivery to email and can toggle local save',
+      (tester) async {
     final transport = FakeLoggerTransport();
     final controller = DownloadController(transport: transport);
-    await tester.pumpWidget(_app(controller)); await tester.pump();
-    transport.stream.add(framed(validRpb(sequences: [100, 101]))); await tester.pump();
+    await _pumpConnected(tester, controller, transport);
+    transport.stream.add(framed(validRpb(sequences: [100, 101])));
+    await tester.pump();
     expect(find.text('Download ready'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Save locally'), findsOneWidget);
     expect(find.text('Create email'), findsOneWidget);
-    await tester.tap(find.text('Save locally')); await tester.pump();
+    await tester.tap(find.text('Save locally'));
+    await tester.pump();
     expect(find.text('Save RPB'), findsOneWidget);
-    await tester.tap(find.text('Email')); await tester.pump();
+    await tester.tap(find.text('Email'));
+    await tester.pump();
     expect(find.text('Create email'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
@@ -62,9 +71,10 @@ void main() {
   testWidgets('never enables delivery for a corrupt RPB', (tester) async {
     final transport = FakeLoggerTransport();
     final controller = DownloadController(transport: transport);
-    await tester.pumpWidget(_app(controller)); await tester.pump();
+    await _pumpConnected(tester, controller, transport);
     final corrupt = validRpb()..[25] ^= 1;
-    transport.stream.add(framed(corrupt)); await tester.pump();
+    transport.stream.add(framed(corrupt));
+    await tester.pump();
     expect(find.text('Download failed'), findsOneWidget);
     expect(find.text('Create email'), findsNothing);
     expect(find.text('Save RPB'), findsNothing);
@@ -73,7 +83,18 @@ void main() {
   });
 }
 
-Widget _app(DownloadController controller) => MaterialApp(home: DownloaderPage(controller: controller));
+Widget _app(DownloadController controller) =>
+    MaterialApp(home: DownloaderPage(controller: controller));
+
+Future<void> _pumpConnected(WidgetTester tester, DownloadController controller,
+    FakeLoggerTransport transport) async {
+  await tester.pumpWidget(_app(controller));
+  for (var attempt = 0; attempt < 10 && !transport.hasListener; attempt++) {
+    await tester.pump();
+  }
+  expect(transport.connected, isTrue);
+  expect(transport.hasListener, isTrue);
+}
 
 Future<void> _dispose(WidgetTester tester, DownloadController controller,
     FakeLoggerTransport transport) async {

@@ -26,7 +26,8 @@ abstract final class RpbValidator {
     final view = ByteData.sublistView(data);
     if (view.getUint32(0, Endian.little) != headerMagic ||
         view.getUint16(6, Endian.little) != headerSize ||
-        view.getUint16(10, Endian.little) != recordSize || data[47] != 1) {
+        view.getUint16(10, Endian.little) != recordSize ||
+        data[47] != 1) {
       throw const RpbValidationException('The RPB header is unsupported.');
     }
     if (_crc32(data.sublist(0, 60)) != view.getUint32(60, Endian.little)) {
@@ -35,20 +36,27 @@ abstract final class RpbValidator {
     final count = view.getUint32(64, Endian.little);
     final expected = headerSize + manifestSize + count * recordSize;
     if (data.length != expected) {
-      throw RpbValidationException('Invalid RPB length: expected $expected, got ${data.length}.');
+      throw RpbValidationException(
+          'Invalid RPB length: expected $expected, got ${data.length}.');
     }
     if (_crc32(data.sublist(64, 76)) != view.getUint32(76, Endian.little)) {
-      throw const RpbValidationException('The RPB manifest checksum is invalid.');
+      throw const RpbValidationException(
+          'The RPB manifest checksum is invalid.');
     }
     if (count > 0) {
       final first = view.getUint32(80, Endian.little);
       final last = view.getUint32(80 + (count - 1) * recordSize, Endian.little);
       if (first != view.getUint32(68, Endian.little) ||
           last != view.getUint32(72, Endian.little)) {
-        throw const RpbValidationException('Manifest sequence bounds do not match the records.');
+        throw const RpbValidationException(
+            'Manifest sequence bounds do not match the records.');
       }
     }
-    final id = view.getUint32(12, Endian.little).toRadixString(16).toUpperCase().padLeft(6, '0');
+    final id = view
+        .getUint32(12, Endian.little)
+        .toRadixString(16)
+        .toUpperCase()
+        .padLeft(6, '0');
     return RpbInfo(deviceId: 'RP-$id', recordCount: count);
   }
 
