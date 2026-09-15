@@ -73,7 +73,9 @@ final class DesktopLoggerTransport implements LoggerTransport {
     config.parity = SerialPortParity.none;
     config.setFlowControl(SerialPortFlowControl.none);
     port.config = config;
-    config.dispose();
+    // SerialPort retains this configuration and disposes it with the port.
+    // Disposing it here causes a second sp_free_config when a completed
+    // download closes the connection, which aborts the macOS process.
     return _DesktopConnection(port);
   }
 }
