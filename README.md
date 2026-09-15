@@ -55,7 +55,7 @@ is required.
 
 ## Download a recording
 
-1. Open RoadPulse Downloader before connecting the logger.
+1. Open RoadPulse Downloader before connecting RoadPulse Logger.
 2. Plug the RoadPulse Logger into the computer by USB.
 3. Wait while the app discovers the logger and downloads the recording
    automatically. The screen reads **Downloading retained records…** during the
@@ -63,9 +63,9 @@ is required.
 4. Wait for the beep. The beep means the `.rpb` file has been completely
    downloaded and passed its integrity checks; the logger can now be unplugged.
    The app shows the earliest and latest recording dates, including the year,
-   so you can confirm that the logger has been recording recently.
+   so you can confirm that RoadPulse Logger has been recording recently.
 5. Confirm the prompt to create the email. Your email program opens with the
-   `.rpb` file attached, the logger serial number as the subject, and the
+   `.rpb` file attached, the RoadPulse Logger serial number as the subject, and the
    RoadPulse delivery address filled in. Review it and press **Send**.
 
 On macOS and Windows, **Email** is selected by default. Select **Save locally**

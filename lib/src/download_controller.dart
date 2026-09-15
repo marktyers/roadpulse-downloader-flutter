@@ -50,7 +50,7 @@ final class DownloadController extends ChangeNotifier {
       }
       if (phase == DownloadPhase.waiting && selectedDevice == null) {
         detail = found.length > 1
-            ? 'Waiting for a RoadPulse logger. Disconnect other USB serial devices if it is not detected.'
+            ? 'Waiting for RoadPulse Logger. Disconnect other USB serial devices if it is not detected.'
             : 'Waiting for logger…';
       }
       notifyListeners();
@@ -87,7 +87,7 @@ final class DownloadController extends ChangeNotifier {
     info = null;
     progress = 0;
     phase = DownloadPhase.connecting;
-    status = 'Logger connected';
+    status = 'RoadPulse Logger connected';
     detail = 'Preparing download…';
     notifyListeners();
     try {
@@ -95,13 +95,13 @@ final class DownloadController extends ChangeNotifier {
       _connection = await _transport.connect(device);
       phase = DownloadPhase.downloading;
       status = 'Downloading retained records…';
-      detail = 'Keep the logger connected until the completion beep.';
+      detail = 'Keep RoadPulse Logger connected until the completion beep.';
       notifyListeners();
       _resetInactivityTimer();
       _subscription =
           _connection!.bytes.listen(_onBytes, onError: _fail, onDone: () {
         if (phase == DownloadPhase.downloading) {
-          _fail('The logger disconnected before the export completed.');
+          _fail('RoadPulse Logger disconnected before the export completed.');
         }
       });
     } catch (error) {
@@ -143,7 +143,7 @@ final class DownloadController extends ChangeNotifier {
     _inactivityTimer = Timer(
         const Duration(seconds: 30),
         () => _fail(
-            'The logger stopped sending data before the export completed.'));
+            'RoadPulse Logger stopped sending data before the export completed.'));
   }
 
   void _fail(Object error) {
@@ -152,7 +152,7 @@ final class DownloadController extends ChangeNotifier {
     _closeConnection();
     phase = DownloadPhase.failed;
     status = 'Download failed';
-    detail = '$error Unplug and reconnect the logger.';
+    detail = '$error Unplug and reconnect RoadPulse Logger.';
     notifyListeners();
   }
 
