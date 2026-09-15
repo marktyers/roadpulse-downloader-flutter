@@ -19,6 +19,7 @@ final class UsbFrameParser {
   final _trailer = <int>[];
   _Phase _phase = _Phase.header;
   int? _highNibble;
+  bool _atPayloadLineStart = false;
   int? expectedPayloadBytes;
   int receivedPayloadBytes = 0;
 
@@ -67,7 +68,18 @@ final class UsbFrameParser {
   }
 
   void _consumePayload(int byte) {
-    if (byte == 9 || byte == 10 || byte == 13 || byte == 32) return;
+    if (byte == 10) {
+      _atPayloadLineStart = true;
+      return;
+    }
+    if (byte == 9 || byte == 13 || byte == 32) return;
+    if (_atPayloadLineStart && byte == 82) {
+      _trailer.add(10);
+      _trailer.add(byte);
+      _phase = _Phase.trailer;
+      return;
+    }
+    _atPayloadLineStart = false;
     final nibble = _hex(byte);
     if (nibble == null) {
       throw const UsbFrameException(
@@ -90,8 +102,18 @@ final class UsbFrameParser {
     }
     _trailer.add(byte);
     if (_indexOf(_trailer, _endMarker) >= 0) {
+      if (receivedPayloadBytes != expectedPayloadBytes) {
+        throw UsbFrameException('Export length mismatch: expected '
+            '${expectedPayloadBytes ?? 0}, received $receivedPayloadBytes.');
+      }
       _phase = _Phase.complete;
       return true;
+    }
+    if (_indexOf(
+            _trailer, 'RPB_USB_EXPORT_FAILED'.codeUnits) >=
+        0) {
+      throw const UsbFrameException(
+          'RoadPulse Logger could not read its retained records.');
     }
     if (_trailer.length > _maximumTrailerBytes) {
       throw UsbFrameException('Export length mismatch: expected '

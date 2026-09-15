@@ -62,7 +62,16 @@ void main() {
     test('rejects a short payload', () {
       final parser = UsbFrameParser();
       expect(() => parser.append('RPB_HEX_BEGIN 2\n00\nRPB_HEX_END'.codeUnits),
-          throwsA(isA<UsbFrameException>()));
+          throwsA(predicate((error) => '$error'.contains('length mismatch'))));
+    });
+
+    test('reports an explicit logger export failure', () {
+      final parser = UsbFrameParser();
+      expect(
+          () => parser.append(
+              'RPB_HEX_BEGIN 2\n00\nRPB_USB_EXPORT_FAILED stream'.codeUnits),
+          throwsA(predicate((error) =>
+              '$error'.contains('could not read its retained records'))));
     });
 
     test('decodes a large frame incrementally', () {

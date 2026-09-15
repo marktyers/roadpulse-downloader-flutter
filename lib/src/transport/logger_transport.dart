@@ -60,7 +60,10 @@ final class DesktopLoggerTransport implements LoggerTransport {
   @override
   Future<LoggerConnection> connect(LoggerDevice device) async {
     final port = SerialPort(device.nativeDevice as String);
-    if (!port.openReadWrite()) {
+    // The logger sends its export without a request from the host. Opening the
+    // port read-only matches the proven native macOS downloader and avoids
+    // toggling USB CDC control lines while a large export is in flight.
+    if (!port.openRead()) {
       final message =
           SerialPort.lastError?.message ?? 'Unknown serial-port error';
       port.dispose();
@@ -72,6 +75,8 @@ final class DesktopLoggerTransport implements LoggerTransport {
     config.stopBits = 1;
     config.parity = SerialPortParity.none;
     config.setFlowControl(SerialPortFlowControl.none);
+    config.dtr = SerialPortDtr.off;
+    config.rts = SerialPortRts.off;
     port.config = config;
     // SerialPort retains this configuration and disposes it with the port.
     // Disposing it here causes a second sp_free_config when a completed
