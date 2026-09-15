@@ -30,7 +30,7 @@ jobs:
       - name: Test with coverage
         run: flutter test --coverage --reporter compact
       - name: Upload coverage
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v7
         with:
           files: coverage/lcov.info
           use_oidc: true

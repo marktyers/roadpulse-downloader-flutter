@@ -50,7 +50,7 @@ jobs:
           DELIVERY_EMAIL: ${{ secrets.DELIVERY_EMAIL }}
         run: flutter build appbundle --release --dart-define=DELIVERY_EMAIL="$DELIVERY_EMAIL"
       - name: Upload app bundle artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: RoadPulse-Downloader-Android
           path: build/app/outputs/bundle/release/app-release.aab

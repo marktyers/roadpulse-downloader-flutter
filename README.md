@@ -22,9 +22,12 @@ All published versions and release notes are on the
 ## Install on macOS
 
 1. Download **RoadPulse-Downloader-macOS.zip** using the link above.
-2. Open the downloaded ZIP file.
-3. Drag **RoadPulse Downloader** into your **Applications** folder.
-4. Open the app from **Applications**.
+2. Safari normally expands the download automatically. Drag **RoadPulse
+   Downloader** from **Downloads** into your **Applications** folder.
+3. Open the app from **Applications**.
+
+If your browser leaves the ZIP file in **Downloads**, double-click it first,
+then drag **RoadPulse Downloader** into **Applications**.
 
 The current preview release is not yet signed and notarised by Apple. The first
 time you open it, macOS may say that Apple could not verify it:

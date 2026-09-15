@@ -26,7 +26,7 @@ jobs:
         run: flutter build macos --release --dart-define=DELIVERY_EMAIL="$DELIVERY_EMAIL"
       - name: Package macOS application
         run: ditto -c -k --sequesterRsrc --keepParent "build/macos/Build/Products/Release/RoadPulse Downloader.app" RoadPulse-Downloader-macOS.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: RoadPulse-Downloader-macOS
           path: RoadPulse-Downloader-macOS.zip
@@ -48,7 +48,7 @@ jobs:
       - name: Package Windows application
         shell: pwsh
         run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath RoadPulse-Downloader-Windows.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: RoadPulse-Downloader-Windows
           path: RoadPulse-Downloader-Windows.zip
@@ -58,7 +58,7 @@ jobs:
     needs: [macos, windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           pattern: RoadPulse-Downloader-*
           path: release-assets
