@@ -60,6 +60,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        scrollable: true,
         icon: const Icon(Icons.check_circle_outline),
         title: const Text('Download complete'),
         content: Text(
@@ -197,93 +198,96 @@ final class _DownloaderPageState extends State<DownloaderPage> {
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: controller,
         builder: (context, _) => Scaffold(
-          appBar: AppBar(title: const Text('RoadPulse Downloader')),
           body: Center(
-              child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(_icon,
-                        size: 64, color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(height: 20),
-                    Text(controller.status,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineSmall),
-                    const SizedBox(height: 10),
-                    Text(controller.detail,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge),
-                    if (Platform.isIOS) ...[
-                      const SizedBox(height: 16),
-                      const Text(
-                        'iPhone and iPad cannot access the logger’s current USB CDC export. '
-                        'The logger needs BLE, network, or Apple External Accessory support.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                    if (controller.phase == DownloadPhase.downloading) ...[
-                      const SizedBox(height: 24),
-                      LinearProgressIndicator(value: controller.progress),
-                    ],
-                    if (controller.phase == DownloadPhase.ready) ...[
-                      const SizedBox(height: 22),
-                      Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.date_range),
-                          title: const Text('Recording dates'),
-                          subtitle: Text(_recordDateRange),
-                        ),
-                      ),
-                    ],
-                    if (!Platform.isAndroid &&
-                        controller.phase == DownloadPhase.ready) ...[
+              child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_icon,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(height: 12),
-                      SegmentedButton<DeliveryMethod>(
-                        segments: const [
-                          ButtonSegment(
-                              value: DeliveryMethod.email,
-                              icon: Icon(Icons.email_outlined),
-                              label: Text('Email')),
-                          ButtonSegment(
-                              value: DeliveryMethod.localSave,
-                              icon: Icon(Icons.save_alt),
-                              label: Text('Save locally')),
-                        ],
-                        selected: {delivery},
-                        onSelectionChanged: (value) =>
-                            setState(() => delivery = value.single),
-                      ),
+                      Text(controller.status,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineSmall),
+                      const SizedBox(height: 6),
+                      Text(controller.detail,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge),
+                      if (Platform.isIOS) ...[
+                        const SizedBox(height: 16),
+                        const Text(
+                          'iPhone and iPad cannot access the logger’s current USB CDC export. '
+                          'The logger needs BLE, network, or Apple External Accessory support.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      if (controller.phase == DownloadPhase.downloading) ...[
+                        const SizedBox(height: 16),
+                        LinearProgressIndicator(value: controller.progress),
+                      ],
+                      if (controller.phase == DownloadPhase.ready) ...[
+                        const SizedBox(height: 14),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.date_range),
+                            title: const Text('Recording dates'),
+                            subtitle: Text(_recordDateRange),
+                          ),
+                        ),
+                      ],
+                      if (!Platform.isAndroid &&
+                          controller.phase == DownloadPhase.ready) ...[
+                        const SizedBox(height: 8),
+                        SegmentedButton<DeliveryMethod>(
+                          segments: const [
+                            ButtonSegment(
+                                value: DeliveryMethod.email,
+                                icon: Icon(Icons.email_outlined),
+                                label: Text('Email')),
+                            ButtonSegment(
+                                value: DeliveryMethod.localSave,
+                                icon: Icon(Icons.save_alt),
+                                label: Text('Save locally')),
+                          ],
+                          selected: {delivery},
+                          onSelectionChanged: (value) =>
+                              setState(() => delivery = value.single),
+                        ),
+                      ],
+                      if (controller.phase == DownloadPhase.ready) ...[
+                        const SizedBox(height: 10),
+                        FilledButton.icon(
+                          onPressed: delivering ? null : _deliver,
+                          icon: Icon(delivery == DeliveryMethod.email ||
+                                  Platform.isAndroid
+                              ? Icons.attach_email
+                              : Icons.save_alt),
+                          label: Text(delivering
+                              ? 'Preparing…'
+                              : (delivery == DeliveryMethod.email ||
+                                      Platform.isAndroid
+                                  ? 'Create email'
+                                  : 'Save RPB')),
+                        ),
+                      ],
+                      if (controller.phase == DownloadPhase.failed) ...[
+                        const SizedBox(height: 16),
+                        OutlinedButton(
+                            onPressed: controller.reset,
+                            child: const Text('Try again')),
+                      ],
+                      const SizedBox(height: 10),
+                      Text('Read-only download · logger flash is never changed',
+                          style: Theme.of(context).textTheme.bodySmall),
                     ],
-                    if (controller.phase == DownloadPhase.ready) ...[
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: delivering ? null : _deliver,
-                        icon: Icon(delivery == DeliveryMethod.email ||
-                                Platform.isAndroid
-                            ? Icons.attach_email
-                            : Icons.save_alt),
-                        label: Text(delivering
-                            ? 'Preparing…'
-                            : (delivery == DeliveryMethod.email ||
-                                    Platform.isAndroid
-                                ? 'Create email'
-                                : 'Save RPB')),
-                      ),
-                    ],
-                    if (controller.phase == DownloadPhase.failed) ...[
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                          onPressed: controller.reset,
-                          child: const Text('Try again')),
-                    ],
-                    const SizedBox(height: 16),
-                    Text('Read-only download · logger flash is never changed',
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                )),
+                  )),
+            ),
           )),
         ),
       );

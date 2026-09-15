@@ -9,6 +9,24 @@ import 'package:roadpulse_downloader/src/ui/downloader_page.dart';
 import 'support/fakes.dart';
 
 void main() {
+  testWidgets('fits the complete workflow in the compact desktop window',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(560, 400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final transport = FakeLoggerTransport();
+    final controller = DownloadController(transport: transport);
+    await _pumpConnected(tester, controller, transport);
+    transport.stream.add(framed(validRpb()));
+    await tester.pump();
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Later'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Create email'), findsOneWidget);
+    await _dispose(tester, controller, transport);
+  });
+
   testWidgets('shows the waiting state with no USB device', (tester) async {
     final transport = FakeLoggerTransport(devices: const []);
     final controller = DownloadController(transport: transport);
