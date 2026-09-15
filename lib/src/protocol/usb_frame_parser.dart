@@ -109,9 +109,7 @@ final class UsbFrameParser {
       _phase = _Phase.complete;
       return true;
     }
-    if (_indexOf(
-            _trailer, 'RPB_USB_EXPORT_FAILED'.codeUnits) >=
-        0) {
+    if (_indexOf(_trailer, 'RPB_USB_EXPORT_FAILED'.codeUnits) >= 0) {
       throw const UsbFrameException(
           'RoadPulse Logger could not read its retained records.');
     }
