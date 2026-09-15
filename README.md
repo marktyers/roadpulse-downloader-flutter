@@ -23,7 +23,7 @@ All published versions and release notes are on the
 
 1. Download **RoadPulse-Downloader-macOS.zip** using the link above.
 2. Open the downloaded ZIP file.
-3. Drag `roadpulse_downloader` into your **Applications** folder.
+3. Drag **RoadPulse Downloader** into your **Applications** folder.
 4. Open the app from **Applications**.
 
 The current preview release is not yet signed and notarised by Apple. The first
@@ -32,7 +32,7 @@ time you open it, macOS may say that Apple could not verify it:
 1. Click **Done** on the warning.
 2. Open **System Settings**, select **Privacy & Security**, then scroll down to
    **Security**.
-3. Click **Open Anyway** beside `roadpulse_downloader`.
+3. Click **Open Anyway** beside **RoadPulse Downloader**.
 4. Enter your Mac password and confirm **Open**.
 
 macOS remembers this choice, so it is normally required only once per downloaded
@@ -44,7 +44,7 @@ version. Only approve an app obtained from the official download link above.
 2. Right-click the ZIP file, select **Extract All**, then choose a permanent
    location such as your Documents folder.
 3. Keep all the extracted files together and open
-   `roadpulse_downloader.exe` from that folder.
+   **RoadPulse Downloader.exe** from that folder.
 4. Optionally right-click the program and choose **Pin to Start** or create a
    shortcut.
 
@@ -57,8 +57,9 @@ is required.
 
 1. Open RoadPulse Downloader before connecting the logger.
 2. Plug the RoadPulse Logger into the computer by USB.
-3. Wait while the app discovers the logger and downloads the recording. If more
-   than one serial device is connected, select the logger from the list.
+3. Wait while the app discovers the logger and downloads the recording
+   automatically. The screen reads **Downloading retained records…** during the
+   transfer.
 4. Wait for the beep. The beep means the `.rpb` file has been completely
    downloaded and passed its integrity checks; the logger can now be unplugged.
    The app shows the earliest and latest recording dates, including the year,
@@ -75,8 +76,8 @@ only reads from the logger and does not modify its storage.
 
 - **The logger is not detected:** unplug it, close the app, reopen the app and
   reconnect it. Try another data-capable USB cable or USB port if necessary.
-- **Several devices are listed:** choose the port that appeared after plugging
-  in the logger. On Windows this is shown as a COM port.
+- **The logger is not detected when other USB devices are attached:** disconnect
+  unrelated USB serial devices, then unplug and reconnect the logger.
 - **No email window appears:** make sure a default email application is
   configured. The validated file remains available in the app, where it can be
   saved locally and attached manually.

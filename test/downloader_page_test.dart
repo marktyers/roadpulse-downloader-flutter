@@ -14,13 +14,12 @@ void main() {
     final controller = DownloadController(transport: transport);
     await tester.pumpWidget(_app(controller));
     await tester.pump();
-    expect(find.text('Open this app, then plug in the RoadPulse logger.'),
-        findsOneWidget);
+    expect(find.text('Plug in RoadPulse Logger'), findsOneWidget);
     expect(find.textContaining('Read-only download'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
 
-  testWidgets('offers a chooser when serial-device discovery is ambiguous',
+  testWidgets('keeps serial-port details hidden when discovery is ambiguous',
       (tester) async {
     final transport = FakeLoggerTransport(devices: const [
       LoggerDevice('COM1', 'Generic serial', 'COM1'),
@@ -29,8 +28,9 @@ void main() {
     final controller = DownloadController(transport: transport);
     await tester.pumpWidget(_app(controller));
     await tester.pump();
-    expect(find.text('Serial device'), findsOneWidget);
-    expect(find.text('Connect'), findsOneWidget);
+    expect(find.byType(DropdownButtonFormField<LoggerDevice>), findsNothing);
+    expect(find.textContaining('Disconnect other USB serial devices'),
+        findsOneWidget);
     expect(transport.connected, isFalse);
     await _dispose(tester, controller, transport);
   });
@@ -44,6 +44,7 @@ void main() {
         .add(Uint8List.fromList(frame.sublist(0, frame.length ~/ 2)));
     await tester.pump();
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.text('Downloading retained records…'), findsOneWidget);
     expect(find.textContaining('Downloading:'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });

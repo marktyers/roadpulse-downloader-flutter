@@ -25,7 +25,7 @@ jobs:
           DELIVERY_EMAIL: ${{ secrets.DELIVERY_EMAIL }}
         run: flutter build macos --release --dart-define=DELIVERY_EMAIL="$DELIVERY_EMAIL"
       - name: Package macOS application
-        run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/roadpulse_downloader.app RoadPulse-Downloader-macOS.zip
+        run: ditto -c -k --sequesterRsrc --keepParent "build/macos/Build/Products/Release/RoadPulse Downloader.app" RoadPulse-Downloader-macOS.zip
       - uses: actions/upload-artifact@v4
         with:
           name: RoadPulse-Downloader-macOS

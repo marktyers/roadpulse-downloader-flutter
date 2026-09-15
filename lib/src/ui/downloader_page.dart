@@ -10,7 +10,6 @@ import 'package:share_plus/share_plus.dart';
 
 import '../download_controller.dart';
 import '../app_configuration.dart';
-import '../transport/logger_transport.dart';
 
 enum DeliveryMethod { email, localSave }
 
@@ -229,28 +228,6 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                       const SizedBox(height: 24),
                       LinearProgressIndicator(value: controller.progress),
                     ],
-                    if (_showPicker) ...[
-                      const SizedBox(height: 24),
-                      DropdownButtonFormField<LoggerDevice>(
-                        initialValue: controller.selectedDevice,
-                        decoration: const InputDecoration(
-                            labelText: 'Serial device',
-                            border: OutlineInputBorder()),
-                        items: controller.devices
-                            .map((device) => DropdownMenuItem(
-                                value: device,
-                                child: Text(device.label,
-                                    overflow: TextOverflow.ellipsis)))
-                            .toList(),
-                        onChanged: controller.selectDevice,
-                      ),
-                      const SizedBox(height: 12),
-                      FilledButton(
-                          onPressed: controller.selectedDevice == null
-                              ? null
-                              : controller.connect,
-                          child: const Text('Connect')),
-                    ],
                     if (controller.phase == DownloadPhase.ready) ...[
                       const SizedBox(height: 22),
                       Card(
@@ -311,10 +288,6 @@ final class _DownloaderPageState extends State<DownloaderPage> {
         ),
       );
 
-  bool get _showPicker =>
-      controller.devices.length > 1 &&
-      (controller.phase == DownloadPhase.waiting ||
-          controller.phase == DownloadPhase.failed);
   IconData get _icon => switch (controller.phase) {
         DownloadPhase.ready => Icons.check_circle_outline,
         DownloadPhase.failed => Icons.error_outline,

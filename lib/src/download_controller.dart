@@ -20,7 +20,7 @@ final class DownloadController extends ChangeNotifier {
   bool _scanning = false;
 
   DownloadPhase phase = DownloadPhase.waiting;
-  String status = 'Open this app, then plug in the RoadPulse logger.';
+  String status = 'Plug in RoadPulse Logger';
   String detail = 'Waiting for logger…';
   List<LoggerDevice> devices = const [];
   LoggerDevice? selectedDevice;
@@ -47,6 +47,11 @@ final class DownloadController extends ChangeNotifier {
       if (selectedDevice == null ||
           !found.any((d) => d.id == selectedDevice!.id)) {
         selectedDevice = _preferred(found);
+      }
+      if (phase == DownloadPhase.waiting && selectedDevice == null) {
+        detail = found.length > 1
+            ? 'Waiting for a RoadPulse logger. Disconnect other USB serial devices if it is not detected.'
+            : 'Waiting for logger…';
       }
       notifyListeners();
       if (phase == DownloadPhase.waiting && selectedDevice != null) {
@@ -89,7 +94,8 @@ final class DownloadController extends ChangeNotifier {
       _parser = UsbFrameParser();
       _connection = await _transport.connect(device);
       phase = DownloadPhase.downloading;
-      detail = 'Downloading retained records…';
+      status = 'Downloading retained records…';
+      detail = 'Keep the logger connected until the completion beep.';
       notifyListeners();
       _resetInactivityTimer();
       _subscription =
@@ -156,8 +162,8 @@ final class DownloadController extends ChangeNotifier {
     info = null;
     progress = 0;
     phase = DownloadPhase.waiting;
-    status = 'Waiting for logger';
-    detail = 'Plug in a RoadPulse logger to start a new download.';
+    status = 'Plug in RoadPulse Logger';
+    detail = 'Waiting for logger…';
     notifyListeners();
   }
 

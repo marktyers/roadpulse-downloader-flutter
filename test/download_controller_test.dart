@@ -29,6 +29,7 @@ void main() {
     expect(transport.connected, isFalse);
     expect(controller.selectedDevice, isNull);
     expect(controller.devices, hasLength(2));
+    expect(controller.detail, contains('Disconnect other USB serial devices'));
     controller.dispose();
     await transport.dispose();
   });
