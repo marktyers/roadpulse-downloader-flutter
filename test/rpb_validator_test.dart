@@ -31,6 +31,19 @@ void main() {
           RpbValidator.validate(validRpb(sequences: [41, 42, 43])).recordCount,
           3);
     });
+    test('validates a version-2 snapshot with tags', () {
+      final info = RpbValidator.validate(validRpb(
+        sequences: [41, 42],
+        tags: const ['testbed', 'prototype'],
+      ));
+      expect(info.recordCount, 2);
+      expect(info.deviceId, 'RP-8FCBA4');
+    });
+    test('rejects a corrupt version-2 tags extension', () {
+      final data = validRpb(tags: const ['testbed', 'prototype'])..[72] ^= 1;
+      expect(() => RpbValidator.validate(data),
+          throwsA(predicate((e) => '$e'.contains('tags extension'))));
+    });
     test('keeps device IDs wider than six hexadecimal digits', () {
       expect(RpbValidator.validate(validRpb(deviceId: 0x12345678)).deviceId,
           'RP-12345678');

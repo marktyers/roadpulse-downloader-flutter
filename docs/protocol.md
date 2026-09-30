@@ -49,14 +49,19 @@ All integers are little-endian. The binary payload must satisfy:
 
 - At least 80 bytes: 64-byte header plus 16-byte manifest.
 - Header magic at offset 0 is `0x48425052` (`RPBH` on disk).
-- Header size at offset 6 is 64; record size at offset 10 is 41.
+- Version 1 has a 64-byte header. Version 2 has a 64-byte base header followed
+  by a CRC-protected `TAGS` extension; header size at offset 6 identifies the
+  manifest offset. Record size at offset 10 is 41.
 - Byte 47 is 1 (the supported stored-record layout marker).
 - CRC-32/ISO-HDLC of bytes 0–59 equals the value at offset 60.
-- Record count is the unsigned 32-bit value at offset 64.
-- Exact length is `64 + 16 + recordCount * 41`.
-- CRC-32/ISO-HDLC of manifest bytes 64–75 equals offset 76.
+- Version-2 tags are one-byte-length-prefixed printable ASCII strings. The
+  extension accepts one to eight unique tags of 1–32 bytes and validates its
+  own CRC-32 before delivery.
+- Record count is the unsigned 32-bit value at `headerSize`.
+- Exact length is `headerSize + 16 + recordCount * 41`.
+- CRC-32/ISO-HDLC of the first 12 manifest bytes equals its final four bytes.
 - With records present, the first and last record sequence numbers match the
-  manifest values at offsets 68 and 72.
+  manifest sequence-bound values.
 
 The device ID is the unsigned value at header offset 12, formatted as six or
 more upper-case hexadecimal digits after `RP-`. Delivery is enabled only after

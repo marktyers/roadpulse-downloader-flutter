@@ -52,23 +52,43 @@ Uint8List validRpb({
   int deviceId = 0x8fcba4,
   List<int> sequences = const [],
   List<DateTime>? recordDates,
+  List<String> tags = const [],
 }) {
   assert(recordDates == null || recordDates.length == sequences.length);
-  final data = Uint8List(80 + sequences.length * 41);
+  final extensionSize = tags.isEmpty
+      ? 0
+      : 12 + tags.fold<int>(0, (size, tag) => size + 1 + tag.length);
+  final headerSize = 64 + extensionSize;
+  final manifestOffset = headerSize;
+  final recordsOffset = manifestOffset + 16;
+  final data = Uint8List(recordsOffset + sequences.length * 41);
   final view = ByteData.sublistView(data);
   view.setUint32(0, 0x48425052, Endian.little);
-  view.setUint16(4, 1, Endian.little);
-  view.setUint16(6, 64, Endian.little);
+  view.setUint16(4, tags.isEmpty ? 1 : 2, Endian.little);
+  view.setUint16(6, headerSize, Endian.little);
   view.setUint16(8, 1, Endian.little);
   view.setUint16(10, 41, Endian.little);
   view.setUint32(12, deviceId, Endian.little);
   data[47] = 1;
-  view.setUint32(64, sequences.length, Endian.little);
+  if (tags.isNotEmpty) {
+    view.setUint32(64, 0x53474154, Endian.little);
+    view.setUint16(68, extensionSize, Endian.little);
+    data[70] = tags.length;
+    var offset = 72;
+    for (final tag in tags) {
+      data[offset++] = tag.length;
+      data.setRange(offset, offset + tag.length, tag.codeUnits);
+      offset += tag.length;
+    }
+    view.setUint32(
+        headerSize - 4, crc32(data.sublist(64, headerSize - 4)), Endian.little);
+  }
+  view.setUint32(manifestOffset, sequences.length, Endian.little);
   if (sequences.isNotEmpty) {
-    view.setUint32(68, sequences.first, Endian.little);
-    view.setUint32(72, sequences.last, Endian.little);
+    view.setUint32(manifestOffset + 4, sequences.first, Endian.little);
+    view.setUint32(manifestOffset + 8, sequences.last, Endian.little);
     for (var index = 0; index < sequences.length; index++) {
-      final offset = 80 + index * 41;
+      final offset = recordsOffset + index * 41;
       view.setUint32(offset, sequences[index], Endian.little);
       if (recordDates != null) {
         final days =
@@ -78,7 +98,8 @@ Uint8List validRpb({
     }
   }
   view.setUint32(60, crc32(data.sublist(0, 60)), Endian.little);
-  view.setUint32(76, crc32(data.sublist(64, 76)), Endian.little);
+  view.setUint32(manifestOffset + 12,
+      crc32(data.sublist(manifestOffset, manifestOffset + 12)), Endian.little);
   return data;
 }
 
