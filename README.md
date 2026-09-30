@@ -12,8 +12,8 @@ then helps you email or save the file.
 
 | Platform | Download |
 | --- | --- |
-| macOS 13 or newer | [Download RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) |
-| Windows 10 or 11 | [Download RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) |
+| macOS 13 or newer | [Download RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) · v0.3.1 |
+| Windows 10 or 11 | [Download RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) · v0.3.1 |
 | Android | Coming soon through Google Play |
 
 All published versions and release notes are on the
@@ -66,7 +66,8 @@ is required.
 4. Wait for the beep. The beep means the `.rpb` file has been completely
    downloaded and passed its integrity checks; the logger can now be unplugged.
    The app shows the earliest and latest recording dates, including the year,
-   so you can confirm that RoadPulse Logger has been recording recently.
+   and any device tags, so you can confirm which logger produced the file and
+   that it has been recording recently.
 5. Confirm the prompt to create the email. Your email program opens with the
    `.rpb` file attached, the RoadPulse Logger serial number as the subject, and the
    RoadPulse delivery address filled in. Review it and press **Send**.
@@ -75,10 +76,15 @@ On macOS and Windows, **Email** is selected by default. Select **Save locally**
 before connecting the logger if you want to choose a folder instead. The app
 only reads from the logger and does not modify its storage.
 
+To download from another logger without closing the app, select **Download
+another logger**, unplug the completed logger, then connect the next one. The
+app waits for the first logger to be removed before starting another download.
+
 ## Troubleshooting
 
-- **The logger is not detected:** unplug it, close the app, reopen the app and
-  reconnect it. Try another data-capable USB cable or USB port if necessary.
+- **The logger is not detected:** unplug and reconnect it. After a completed
+  download, select **Download another logger** first. Try another data-capable
+  USB cable or USB port if necessary.
 - **The logger is not detected when other USB devices are attached:** disconnect
   unrelated USB serial devices, then unplug and reconnect the logger.
 - **No email window appears:** make sure a default email application is

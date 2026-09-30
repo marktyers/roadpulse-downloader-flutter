@@ -11,11 +11,13 @@ final class RpbInfo {
   const RpbInfo({
     required this.deviceId,
     required this.recordCount,
+    required this.tags,
     this.earliestRecordDate,
     this.latestRecordDate,
   });
   final String deviceId;
   final int recordCount;
+  final List<String> tags;
   final DateTime? earliestRecordDate;
   final DateTime? latestRecordDate;
 }
@@ -47,9 +49,9 @@ abstract final class RpbValidator {
     if (data.length < headerSize + manifestSize) {
       throw const RpbValidationException('The RPB file is truncated.');
     }
-    if (version == 2) {
-      _validateTagsExtension(data, view, headerSize);
-    }
+    final tags = version == 2
+        ? _validateTagsExtension(data, view, headerSize)
+        : const <String>[];
     final manifestOffset = headerSize;
     final recordsOffset = manifestOffset + manifestSize;
     final count = view.getUint32(manifestOffset, Endian.little);
@@ -95,12 +97,13 @@ abstract final class RpbValidator {
     return RpbInfo(
       deviceId: 'RP-$id',
       recordCount: count,
+      tags: tags,
       earliestRecordDate: earliestRecordDate,
       latestRecordDate: latestRecordDate,
     );
   }
 
-  static void _validateTagsExtension(
+  static List<String> _validateTagsExtension(
       Uint8List data, ByteData view, int headerSize) {
     final extensionSize = headerSize - baseHeaderSize;
     if (view.getUint32(64, Endian.little) != tagsMagic ||
@@ -116,7 +119,8 @@ abstract final class RpbValidator {
       throw const RpbValidationException('The RPB tags extension is invalid.');
     }
     var offset = 72;
-    final tags = <String>{};
+    final uniqueTags = <String>{};
+    final tags = <String>[];
     for (var index = 0; index < count; index++) {
       if (offset >= headerSize - 4) {
         throw const RpbValidationException(
@@ -133,16 +137,18 @@ abstract final class RpbValidator {
             'The RPB tags extension is invalid.');
       }
       final tag = String.fromCharCodes(bytes);
-      if (!tags.add(tag)) {
+      if (!uniqueTags.add(tag)) {
         throw const RpbValidationException(
             'The RPB tags extension contains duplicate tags.');
       }
+      tags.add(tag);
       offset += length;
     }
     if (offset != headerSize - 4) {
       throw const RpbValidationException(
           'The RPB tags extension has an invalid length.');
     }
+    return List.unmodifiable(tags);
   }
 
   static int _crc32(List<int> bytes) {

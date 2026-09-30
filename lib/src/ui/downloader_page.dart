@@ -65,6 +65,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
         title: const Text('Download complete'),
         content: Text(
           'Recording dates\n$_recordDateRange\n\n'
+          'Tags\n$_tagSummary\n\n'
           'The RPB file is ready. Send the email now?',
           textAlign: TextAlign.center,
         ),
@@ -114,6 +115,11 @@ final class _DownloaderPageState extends State<DownloaderPage> {
     }
     if (earliest == latest) return _formatDate(earliest);
     return '${_formatDate(earliest)} – ${_formatDate(latest)}';
+  }
+
+  String get _tagSummary {
+    final tags = controller.info?.tags ?? const <String>[];
+    return tags.isEmpty ? 'No tags' : tags.join(', ');
   }
 
   String _formatDate(DateTime date) {
@@ -198,6 +204,17 @@ final class _DownloaderPageState extends State<DownloaderPage> {
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: controller,
         builder: (context, _) => Scaffold(
+          bottomNavigationBar: Padding(
+            padding: const EdgeInsets.only(right: 10, bottom: 6),
+            child: Align(
+              alignment: Alignment.centerRight,
+              heightFactor: 1,
+              child: Text(
+                'v${AppConfiguration.appVersion}',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+            ),
+          ),
           body: Center(
               child: SingleChildScrollView(
             child: ConstrainedBox(
@@ -234,10 +251,20 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                       if (controller.phase == DownloadPhase.ready) ...[
                         const SizedBox(height: 14),
                         Card(
-                          child: ListTile(
-                            leading: const Icon(Icons.date_range),
-                            title: const Text('Recording dates'),
-                            subtitle: Text(_recordDateRange),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.date_range),
+                                title: const Text('Recording dates'),
+                                subtitle: Text(_recordDateRange),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.sell_outlined),
+                                title: const Text('Tags'),
+                                subtitle: Text(_tagSummary),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -274,6 +301,12 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                                       Platform.isAndroid
                                   ? 'Create email'
                                   : 'Save RPB')),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: controller.prepareForNextLogger,
+                          icon: const Icon(Icons.usb),
+                          label: const Text('Download another logger'),
                         ),
                       ],
                       if (controller.phase == DownloadPhase.failed) ...[

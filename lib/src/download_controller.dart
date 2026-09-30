@@ -18,6 +18,7 @@ final class DownloadController extends ChangeNotifier {
   LoggerConnection? _connection;
   UsbFrameParser? _parser;
   bool _scanning = false;
+  bool _waitingForDisconnect = false;
 
   DownloadPhase phase = DownloadPhase.waiting;
   String status = 'Plug in RoadPulse Logger';
@@ -44,6 +45,18 @@ final class DownloadController extends ChangeNotifier {
     try {
       final found = await _transport.devices();
       devices = found;
+      if (_waitingForDisconnect) {
+        final previousStillConnected = selectedDevice != null &&
+            found.any((device) => device.id == selectedDevice!.id);
+        if (previousStillConnected) {
+          detail = 'Unplug the completed logger to continue.';
+          notifyListeners();
+          return;
+        }
+        _waitingForDisconnect = false;
+        selectedDevice = null;
+        detail = 'Plug in the next RoadPulse Logger.';
+      }
       if (selectedDevice == null ||
           !found.any((d) => d.id == selectedDevice!.id)) {
         selectedDevice = _preferred(found);
@@ -167,11 +180,26 @@ final class DownloadController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> prepareForNextLogger() async {
+    await _closeConnection();
+    payload = null;
+    info = null;
+    progress = 0;
+    _waitingForDisconnect = true;
+    phase = DownloadPhase.waiting;
+    status = 'Ready for another logger';
+    detail = 'Unplug the completed logger to continue.';
+    notifyListeners();
+    await refreshDevices();
+  }
+
   Future<void> _closeConnection() async {
-    await _subscription?.cancel();
+    final subscription = _subscription;
     _subscription = null;
-    await _connection?.close();
+    final connection = _connection;
     _connection = null;
+    await subscription?.cancel();
+    await connection?.close();
   }
 
   @override

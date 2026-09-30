@@ -34,6 +34,7 @@ void main() {
     await tester.pump();
     expect(find.text('Plug in RoadPulse Logger'), findsOneWidget);
     expect(find.textContaining('Read-only download'), findsOneWidget);
+    expect(find.text('v0.3.1'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
 
@@ -75,26 +76,57 @@ void main() {
     transport.stream.add(framed(validRpb(
       sequences: [100, 101],
       recordDates: [DateTime.utc(2026, 6, 23), DateTime.utc(2026, 8, 18)],
+      tags: const ['testbed', 'prototype'],
     )));
     await tester.pump();
     await tester.pump();
     expect(find.text('Download ready'), findsOneWidget);
     expect(find.text('Download complete'), findsOneWidget);
     expect(find.text('23 June 2026 – 18 August 2026'), findsOneWidget);
+    expect(find.text('testbed, prototype'), findsOneWidget);
     expect(find.text('Send email'), findsOneWidget);
     await tester.tap(find.text('Later'));
     await tester.pump();
     expect(find.text('Recording dates'), findsOneWidget);
+    expect(find.text('Tags'), findsOneWidget);
+    expect(find.text('testbed, prototype'), findsOneWidget);
     expect(find.text('23 June 2026 – 18 August 2026'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Save locally'), findsOneWidget);
     expect(find.text('Create email'), findsOneWidget);
+    expect(find.text('Download another logger'), findsOneWidget);
     await tester.tap(find.text('Save locally'));
     await tester.pump();
     expect(find.text('Save RPB'), findsOneWidget);
     await tester.tap(find.text('Email'));
     await tester.pump();
     expect(find.text('Create email'), findsOneWidget);
+    await _dispose(tester, controller, transport);
+  });
+
+  testWidgets('waits for disconnect before accepting another logger',
+      (tester) async {
+    final first = const LoggerDevice('logger-1', 'RoadPulse CDC', 'logger-1');
+    final second = const LoggerDevice('logger-2', 'RoadPulse CDC', 'logger-2');
+    final transport = FakeLoggerTransport(devices: [first]);
+    final controller = DownloadController(transport: transport);
+    await _pumpConnected(tester, controller, transport);
+    transport.stream.add(framed(validRpb()));
+    await tester.pump();
+    await tester.pump();
+    await tester.tap(find.text('Later'));
+    await tester.pump();
+    await tester.tap(find.text('Download another logger'));
+    await tester.pump();
+    expect(
+        find.text('Unplug the completed logger to continue.'), findsOneWidget);
+
+    transport.listedDevices = const [];
+    await controller.refreshDevices();
+    transport.listedDevices = [second];
+    await controller.refreshDevices();
+    expect(controller.selectedDevice, second);
+    expect(controller.phase, DownloadPhase.downloading);
     await _dispose(tester, controller, transport);
   });
 

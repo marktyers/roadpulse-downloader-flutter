@@ -11,6 +11,7 @@ void main() {
       final info = RpbValidator.validate(validRpb());
       expect(info.deviceId, 'RP-8FCBA4');
       expect(info.recordCount, 0);
+      expect(info.tags, isEmpty);
       expect(info.earliestRecordDate, isNull);
       expect(info.latestRecordDate, isNull);
     });
@@ -38,6 +39,7 @@ void main() {
       ));
       expect(info.recordCount, 2);
       expect(info.deviceId, 'RP-8FCBA4');
+      expect(info.tags, ['testbed', 'prototype']);
     });
     test('rejects a corrupt version-2 tags extension', () {
       final data = validRpb(tags: const ['testbed', 'prototype'])..[72] ^= 1;
