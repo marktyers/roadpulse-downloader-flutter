@@ -6,6 +6,7 @@ import 'package:file_selector/file_selector.dart' as selector;
 import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../download_controller.dart';
@@ -26,10 +27,14 @@ final class _DownloaderPageState extends State<DownloaderPage> {
   DeliveryMethod delivery = DeliveryMethod.email;
   bool delivering = false;
   Object? _announcedPayload;
+  late final Future<String> _versionLabel;
 
   @override
   void initState() {
     super.initState();
+    _versionLabel = PackageInfo.fromPlatform()
+        .then((info) => 'Version ${info.version}')
+        .catchError((_) => 'Version 0.3.2');
     _ownsController = widget.controller == null;
     controller = widget.controller ?? DownloadController();
     controller.addListener(_handleControllerChange);
@@ -318,6 +323,15 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                       const SizedBox(height: 10),
                       Text('Read-only download · logger flash is never changed',
                           style: Theme.of(context).textTheme.bodySmall),
+                      const SizedBox(height: 3),
+                      FutureBuilder<String>(
+                        future: _versionLabel,
+                        initialData: 'Version 0.3.2',
+                        builder: (context, snapshot) => Text(
+                          snapshot.data!,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      ),
                     ],
                   )),
             ),
