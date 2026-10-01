@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../download_controller.dart';
 import '../app_configuration.dart';
+import '../delivery_content.dart';
 
 enum DeliveryMethod { email, localSave }
 
@@ -178,7 +179,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
         if (Platform.isAndroid || Platform.isMacOS) {
           await FlutterEmailSender.send(Email(
             recipients: const [AppConfiguration.emailRecipient],
-            subject: controller.info!.deviceId,
+            subject: emailSubjectFor(controller.info!),
             body:
                 'RoadPulse Logger export (${controller.info!.recordCount} records).',
             attachmentPaths: [file.path],
@@ -189,7 +190,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
               XFile(file.path,
                   mimeType: 'application/octet-stream', name: _suggestedName)
             ],
-            subject: controller.info!.deviceId,
+            subject: emailSubjectFor(controller.info!),
             text: 'Send this RoadPulse Logger export to '
                 '${AppConfiguration.emailRecipient}.',
           ));
