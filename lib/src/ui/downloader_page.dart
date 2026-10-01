@@ -34,7 +34,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
     super.initState();
     _versionLabel = PackageInfo.fromPlatform()
         .then((info) => 'Version ${info.version}')
-        .catchError((_) => 'Version 0.3.2');
+        .catchError((_) => 'Version 0.3.3');
     _ownsController = widget.controller == null;
     controller = widget.controller ?? DownloadController();
     controller.addListener(_handleControllerChange);
@@ -214,9 +214,13 @@ final class _DownloaderPageState extends State<DownloaderPage> {
             child: Align(
               alignment: Alignment.centerRight,
               heightFactor: 1,
-              child: Text(
-                'v${AppConfiguration.appVersion}',
-                style: Theme.of(context).textTheme.labelSmall,
+              child: FutureBuilder<String>(
+                future: _versionLabel,
+                initialData: 'Version 0.3.3',
+                builder: (context, snapshot) => Text(
+                  snapshot.data!,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
               ),
             ),
           ),
@@ -323,15 +327,6 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                       const SizedBox(height: 10),
                       Text('Read-only download · logger flash is never changed',
                           style: Theme.of(context).textTheme.bodySmall),
-                      const SizedBox(height: 3),
-                      FutureBuilder<String>(
-                        future: _versionLabel,
-                        initialData: 'Version 0.3.2',
-                        builder: (context, snapshot) => Text(
-                          snapshot.data!,
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                      ),
                     ],
                   )),
             ),

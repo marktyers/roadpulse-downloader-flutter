@@ -34,8 +34,7 @@ void main() {
     await tester.pump();
     expect(find.text('Plug in RoadPulse Logger'), findsOneWidget);
     expect(find.textContaining('Read-only download'), findsOneWidget);
-    expect(find.text('Version 0.3.2'), findsOneWidget);
-    expect(find.text('v0.3.1'), findsOneWidget);
+    expect(find.text('Version 0.3.3'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
 

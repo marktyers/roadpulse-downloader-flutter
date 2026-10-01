@@ -1,7 +1,7 @@
 name: roadpulse_downloader
 description: Cross-platform downloader for RoadPulse Logger RPB snapshots.
 publish_to: none
-version: 0.3.2+7
+version: 0.3.3+8
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

@@ -12,8 +12,8 @@ then helps you email or save the file.
 
 | Platform | Download |
 | --- | --- |
-| macOS 13 or newer | [Download RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) · v0.3.1 |
-| Windows 10 or 11 | [Download RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) · v0.3.1 |
+| macOS 13 or newer | [Download the latest RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) |
+| Windows 10 or 11 | [Download the latest RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) |
 | Android | Coming soon through Google Play |
 
 All published versions and release notes are on the
