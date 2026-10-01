@@ -56,6 +56,24 @@ void main() {
     await transport.dispose();
   });
 
+  test('preserves a full diagnostic export byte-for-byte', () async {
+    final transport = FakeLoggerTransport();
+    final controller = DownloadController(transport: transport)..start();
+    await _settle();
+    final payload = validFull63Rpb(
+      sequences: [21, 22],
+      tags: const ['full'],
+    );
+    transport.stream.add(framed(payload));
+    await _settle();
+    expect(controller.phase, DownloadPhase.ready);
+    expect(controller.info?.profile.displayName,
+        'Full diagnostic — 63-byte records');
+    expect(controller.payload, orderedEquals(payload));
+    controller.dispose();
+    await transport.dispose();
+  });
+
   test('refuses a framed RPB whose checksum is corrupt', () async {
     final transport = FakeLoggerTransport();
     final controller = DownloadController(transport: transport)..start();

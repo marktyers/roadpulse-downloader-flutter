@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'rpb_profile.dart';
+
 final class RpbValidationException implements Exception {
   const RpbValidationException(this.message);
   final String message;
@@ -12,53 +14,98 @@ final class RpbInfo {
     required this.deviceId,
     required this.recordCount,
     required this.tags,
+    required this.profile,
     this.earliestRecordDate,
     this.latestRecordDate,
   });
   final String deviceId;
   final int recordCount;
   final List<String> tags;
+  final RpbRecordProfile profile;
   final DateTime? earliestRecordDate;
   final DateTime? latestRecordDate;
 }
 
 abstract final class RpbValidator {
-  static const baseHeaderSize = 64;
+  static const commonHeaderSize = 12;
   static const manifestSize = 16;
-  static const recordSize = 41;
   static const headerMagic = 0x48425052;
   static const tagsMagic = 0x53474154;
 
   static RpbInfo validate(Uint8List data) {
-    if (data.length < baseHeaderSize + manifestSize) {
-      throw const RpbValidationException('The RPB file is truncated.');
+    if (data.length < commonHeaderSize) {
+      throw const RpbValidationException('The RPB header is truncated.');
     }
     final view = ByteData.sublistView(data);
     final version = view.getUint16(4, Endian.little);
     final headerSize = view.getUint16(6, Endian.little);
+    final schemaVersion = view.getUint16(8, Endian.little);
+    final declaredRecordSize = view.getUint16(10, Endian.little);
+    final profile = RpbProfileRegistry.lookup(schemaVersion, schemaVersion);
+    if (profile == null) {
+      throw RpbValidationException(
+        'Unknown RPB profile identifier $schemaVersion '
+        '(schema version $schemaVersion, record size '
+        '$declaredRecordSize bytes).',
+      );
+    }
+    if (!profile.supported) {
+      throw RpbValidationException(
+        'RPB profile identifier ${profile.identifier} '
+        '(schema version ${profile.schemaVersion}) is not supported.',
+      );
+    }
+    if (data.length < profile.baseHeaderSize) {
+      throw RpbValidationException(
+        'The ${profile.name} RPB header is truncated.',
+      );
+    }
     if (view.getUint32(0, Endian.little) != headerMagic ||
-        view.getUint16(10, Endian.little) != recordSize ||
-        data[47] != 1 ||
-        !((version == 1 && headerSize == baseHeaderSize) ||
-            (version == 2 && headerSize >= baseHeaderSize + 12))) {
+        declaredRecordSize != profile.recordSize ||
+        data[47] != 1) {
       throw const RpbValidationException('The RPB header is unsupported.');
     }
-    if (_crc32(data.sublist(0, 60)) != view.getUint32(60, Endian.little)) {
+    if (profile.extensionProfile case final expected?) {
+      final actual = data[50];
+      if (actual != expected) {
+        throw RpbValidationException(
+          'Unknown RPB extension profile $actual '
+          '(schema version $schemaVersion).',
+        );
+      }
+    }
+    final hasTags = headerSize > profile.baseHeaderSize;
+    final expectedVersion = profile.binaryFormatVersion + (hasTags ? 1 : 0);
+    if (headerSize < profile.baseHeaderSize || version != expectedVersion) {
+      throw const RpbValidationException('The RPB header is unsupported.');
+    }
+    final headerCrcOffset = profile.baseHeaderSize - 4;
+    if (_crc32(data.sublist(0, headerCrcOffset)) !=
+        view.getUint32(headerCrcOffset, Endian.little)) {
       throw const RpbValidationException('The RPB header checksum is invalid.');
     }
     if (data.length < headerSize + manifestSize) {
       throw const RpbValidationException('The RPB file is truncated.');
     }
-    final tags = version == 2
-        ? _validateTagsExtension(data, view, headerSize)
+    final tags = hasTags
+        ? _validateTagsExtension(data, view, profile.baseHeaderSize, headerSize)
         : const <String>[];
     final manifestOffset = headerSize;
     final recordsOffset = manifestOffset + manifestSize;
     final count = view.getUint32(manifestOffset, Endian.little);
-    final expected = headerSize + manifestSize + count * recordSize;
-    if (data.length != expected) {
+    final payloadLength = data.length - recordsOffset;
+    if (payloadLength % profile.recordSize != 0) {
       throw RpbValidationException(
-          'Invalid RPB length: expected $expected, got ${data.length}.');
+        'The RPB payload ends with a partial ${profile.recordSize}-byte '
+        'record (${payloadLength % profile.recordSize} trailing bytes).',
+      );
+    }
+    final actualCount = payloadLength ~/ profile.recordSize;
+    if (actualCount != count) {
+      throw RpbValidationException(
+        'RPB record-count mismatch: header declares $count records '
+        'but the payload contains $actualCount.',
+      );
     }
     if (_crc32(data.sublist(manifestOffset, manifestOffset + 12)) !=
         view.getUint32(manifestOffset + 12, Endian.little)) {
@@ -68,19 +115,18 @@ abstract final class RpbValidator {
     DateTime? earliestRecordDate;
     DateTime? latestRecordDate;
     if (count > 0) {
-      final first = view.getUint32(recordsOffset, Endian.little);
-      final last = view.getUint32(
-          recordsOffset + (count - 1) * recordSize, Endian.little);
+      final first = profile.decoder.sequence(view, recordsOffset);
+      final last = profile.decoder
+          .sequence(view, recordsOffset + (count - 1) * profile.recordSize);
       if (first != view.getUint32(manifestOffset + 4, Endian.little) ||
           last != view.getUint32(manifestOffset + 8, Endian.little)) {
         throw const RpbValidationException(
             'Manifest sequence bounds do not match the records.');
       }
-      final epoch = DateTime.utc(2020);
+      final gpsEpochYear = view.getUint16(48, Endian.little);
       for (var index = 0; index < count; index++) {
-        final offset = recordsOffset + index * recordSize;
-        final date = epoch
-            .add(Duration(days: view.getUint16(offset + 4, Endian.little)));
+        final offset = recordsOffset + index * profile.recordSize;
+        final date = profile.decoder.recordDate(view, offset, gpsEpochYear);
         if (earliestRecordDate == null || date.isBefore(earliestRecordDate)) {
           earliestRecordDate = date;
         }
@@ -98,27 +144,29 @@ abstract final class RpbValidator {
       deviceId: 'RP-$id',
       recordCount: count,
       tags: tags,
+      profile: profile,
       earliestRecordDate: earliestRecordDate,
       latestRecordDate: latestRecordDate,
     );
   }
 
   static List<String> _validateTagsExtension(
-      Uint8List data, ByteData view, int headerSize) {
+      Uint8List data, ByteData view, int baseHeaderSize, int headerSize) {
     final extensionSize = headerSize - baseHeaderSize;
-    if (view.getUint32(64, Endian.little) != tagsMagic ||
-        view.getUint16(68, Endian.little) != extensionSize ||
-        data[71] != 0 ||
-        _crc32(data.sublist(64, headerSize - 4)) !=
+    if (extensionSize < 12 ||
+        view.getUint32(baseHeaderSize, Endian.little) != tagsMagic ||
+        view.getUint16(baseHeaderSize + 4, Endian.little) != extensionSize ||
+        data[baseHeaderSize + 7] != 0 ||
+        _crc32(data.sublist(baseHeaderSize, headerSize - 4)) !=
             view.getUint32(headerSize - 4, Endian.little)) {
       throw const RpbValidationException('The RPB tags extension is invalid.');
     }
 
-    final count = data[70];
+    final count = data[baseHeaderSize + 6];
     if (count == 0 || count > 8) {
       throw const RpbValidationException('The RPB tags extension is invalid.');
     }
-    var offset = 72;
+    var offset = baseHeaderSize + 8;
     final uniqueTags = <String>{};
     final tags = <String>[];
     for (var index = 0; index < count; index++) {

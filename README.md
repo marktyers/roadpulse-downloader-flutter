@@ -12,8 +12,8 @@ then helps you email or save the file.
 
 | Platform | Download | Version |
 | --- | --- | --- |
-| macOS 13 or newer | [Download RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) | v0.3.4 |
-| Windows 10 or 11 | [Download RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) | v0.3.4 |
+| macOS 13 or newer | [Download RoadPulse Downloader for macOS](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-macOS.zip) | v0.4.0 |
+| Windows 10 or 11 | [Download RoadPulse Downloader for Windows](https://github.com/marktyers/roadpulse-downloader-flutter/releases/latest/download/RoadPulse-Downloader-Windows.zip) | v0.4.0 |
 | Android | Coming soon through Google Play | Not released |
 
 All published versions and release notes are on the
@@ -66,8 +66,10 @@ is required.
 4. Wait for the beep. The beep means the `.rpb` file has been completely
    downloaded and passed its integrity checks; the logger can now be unplugged.
    The app shows the earliest and latest recording dates, including the year,
-   and any device tags, so you can confirm which logger produced the file and
-   that it has been recording recently.
+   its detected record profile, and any device tags, so you can confirm which
+   logger produced the file and that it has been recording recently. Both
+   legacy 41-byte recordings and full diagnostic 63-byte recordings are
+   supported.
 5. Confirm the prompt to create the email. Your email program opens with the
    `.rpb` file attached, the RoadPulse Logger serial number as the subject, and the
    RoadPulse delivery address filled in. Review it and press **Send**.
@@ -93,6 +95,9 @@ app waits for the first logger to be removed before starting another download.
 - **The beep sounds but no message was sent:** the beep confirms the download,
   not email delivery. The final email is sent only after you approve it in your
   email application.
+- **The app reports an unknown record profile:** the logger is using a newer
+  recording format that this app does not yet support. The error identifies the
+  profile and schema version; update the app before trying again.
 - **macOS blocks the app:** follow the **Open Anyway** instructions in the macOS
   installation section above.
 - **Windows blocks the app:** use **More info → Run anyway** only after confirming

@@ -34,7 +34,7 @@ void main() {
     await tester.pump();
     expect(find.text('Plug in RoadPulse Logger'), findsOneWidget);
     expect(find.textContaining('Read-only download'), findsOneWidget);
-    expect(find.text('Version 0.3.3'), findsOneWidget);
+    expect(find.text('Version 0.4.0'), findsOneWidget);
     await _dispose(tester, controller, transport);
   });
 
@@ -88,6 +88,8 @@ void main() {
     await tester.tap(find.text('Later'));
     await tester.pump();
     expect(find.text('Recording dates'), findsOneWidget);
+    expect(find.text('Record profile'), findsOneWidget);
+    expect(find.text('Legacy — 41-byte records'), findsOneWidget);
     expect(find.text('Tags'), findsOneWidget);
     expect(find.text('testbed, prototype'), findsOneWidget);
     expect(find.text('23 June 2026 – 18 August 2026'), findsOneWidget);

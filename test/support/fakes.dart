@@ -53,42 +53,52 @@ Uint8List validRpb({
   List<int> sequences = const [],
   List<DateTime>? recordDates,
   List<String> tags = const [],
+  int schemaVersion = 1,
+  int recordSize = 41,
+  int baseHeaderSize = 64,
+  int binaryFormatVersion = 1,
+  int? extensionProfile,
+  int? declaredRecordCount,
 }) {
   assert(recordDates == null || recordDates.length == sequences.length);
   final extensionSize = tags.isEmpty
       ? 0
       : 12 + tags.fold<int>(0, (size, tag) => size + 1 + tag.length);
-  final headerSize = 64 + extensionSize;
+  final headerSize = baseHeaderSize + extensionSize;
   final manifestOffset = headerSize;
   final recordsOffset = manifestOffset + 16;
-  final data = Uint8List(recordsOffset + sequences.length * 41);
+  final data = Uint8List(recordsOffset + sequences.length * recordSize);
   final view = ByteData.sublistView(data);
   view.setUint32(0, 0x48425052, Endian.little);
-  view.setUint16(4, tags.isEmpty ? 1 : 2, Endian.little);
+  view.setUint16(
+      4, binaryFormatVersion + (tags.isEmpty ? 0 : 1), Endian.little);
   view.setUint16(6, headerSize, Endian.little);
-  view.setUint16(8, 1, Endian.little);
-  view.setUint16(10, 41, Endian.little);
+  view.setUint16(8, schemaVersion, Endian.little);
+  view.setUint16(10, recordSize, Endian.little);
   view.setUint32(12, deviceId, Endian.little);
   data[47] = 1;
+  view.setUint16(48, 2020, Endian.little);
+  if (extensionProfile != null) data[50] = extensionProfile;
   if (tags.isNotEmpty) {
-    view.setUint32(64, 0x53474154, Endian.little);
-    view.setUint16(68, extensionSize, Endian.little);
-    data[70] = tags.length;
-    var offset = 72;
+    view.setUint32(baseHeaderSize, 0x53474154, Endian.little);
+    view.setUint16(baseHeaderSize + 4, extensionSize, Endian.little);
+    data[baseHeaderSize + 6] = tags.length;
+    var offset = baseHeaderSize + 8;
     for (final tag in tags) {
       data[offset++] = tag.length;
       data.setRange(offset, offset + tag.length, tag.codeUnits);
       offset += tag.length;
     }
-    view.setUint32(
-        headerSize - 4, crc32(data.sublist(64, headerSize - 4)), Endian.little);
+    view.setUint32(headerSize - 4,
+        crc32(data.sublist(baseHeaderSize, headerSize - 4)), Endian.little);
   }
-  view.setUint32(manifestOffset, sequences.length, Endian.little);
+  view.setUint32(
+      manifestOffset, declaredRecordCount ?? sequences.length, Endian.little);
   if (sequences.isNotEmpty) {
     view.setUint32(manifestOffset + 4, sequences.first, Endian.little);
     view.setUint32(manifestOffset + 8, sequences.last, Endian.little);
     for (var index = 0; index < sequences.length; index++) {
-      final offset = recordsOffset + index * 41;
+      final offset = recordsOffset + index * recordSize;
       view.setUint32(offset, sequences[index], Endian.little);
       if (recordDates != null) {
         final days =
@@ -97,11 +107,32 @@ Uint8List validRpb({
       }
     }
   }
-  view.setUint32(60, crc32(data.sublist(0, 60)), Endian.little);
+  view.setUint32(baseHeaderSize - 4, crc32(data.sublist(0, baseHeaderSize - 4)),
+      Endian.little);
   view.setUint32(manifestOffset + 12,
       crc32(data.sublist(manifestOffset, manifestOffset + 12)), Endian.little);
   return data;
 }
+
+Uint8List validFull63Rpb({
+  int deviceId = 0x8fcba4,
+  List<int> sequences = const [],
+  List<DateTime>? recordDates,
+  List<String> tags = const [],
+  int? declaredRecordCount,
+}) =>
+    validRpb(
+      deviceId: deviceId,
+      sequences: sequences,
+      recordDates: recordDates,
+      tags: tags,
+      schemaVersion: 2,
+      recordSize: 63,
+      baseHeaderSize: 96,
+      binaryFormatVersion: 2,
+      extensionProfile: 3,
+      declaredRecordCount: declaredRecordCount,
+    );
 
 int crc32(List<int> bytes) {
   var crc = 0xffffffff;

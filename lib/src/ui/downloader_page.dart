@@ -35,7 +35,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
     super.initState();
     _versionLabel = PackageInfo.fromPlatform()
         .then((info) => 'Version ${info.version}')
-        .catchError((_) => 'Version 0.3.3');
+        .catchError((_) => 'Version 0.4.0');
     _ownsController = widget.controller == null;
     controller = widget.controller ?? DownloadController();
     controller.addListener(_handleControllerChange);
@@ -71,6 +71,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
         title: const Text('Download complete'),
         content: Text(
           'Recording dates\n$_recordDateRange\n\n'
+          'Record profile\n${controller.info!.profile.displayName}\n\n'
           'Tags\n$_tagSummary\n\n'
           'The RPB file is ready. Send the email now?',
           textAlign: TextAlign.center,
@@ -217,7 +218,7 @@ final class _DownloaderPageState extends State<DownloaderPage> {
               heightFactor: 1,
               child: FutureBuilder<String>(
                 future: _versionLabel,
-                initialData: 'Version 0.3.3',
+                initialData: 'Version 0.4.0',
                 builder: (context, snapshot) => Text(
                   snapshot.data!,
                   style: Theme.of(context).textTheme.labelSmall,
@@ -264,6 +265,12 @@ final class _DownloaderPageState extends State<DownloaderPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              ListTile(
+                                leading: const Icon(Icons.data_object),
+                                title: const Text('Record profile'),
+                                subtitle:
+                                    Text(controller.info!.profile.displayName),
+                              ),
                               ListTile(
                                 leading: const Icon(Icons.date_range),
                                 title: const Text('Recording dates'),
